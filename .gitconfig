@@ -7,6 +7,8 @@
 	diff = diff --color
 	orig = "!find . -type f -name \"*.orig\" -exec rm -i {} \\;"
     add = add --all .
+    ffs = flow feature start
+    fff = flow feature finish
 [push]
 	default = simple
 [pull]
