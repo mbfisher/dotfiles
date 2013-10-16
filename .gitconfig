@@ -1,0 +1,15 @@
+[user]
+	name = Mike Fisher
+	email = mike@mbfisher.com
+[core]
+	excludesfile = /home/mbfisher/.gitignore
+[alias]
+	diff = diff --color
+	orig = "!find . -type f -name \"*.orig\" -exec rm -i {} \\;"
+    add = add --all .
+[push]
+	default = simple
+[pull]
+    default = simple
+[merge]
+	tool = meld
