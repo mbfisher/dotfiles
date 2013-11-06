@@ -3,11 +3,11 @@ URxvt.font: xft:Inconsolata:size=11
 URxvt.iconFile: /home/mbfisher/.local/icons/utilities-terminal.png
 
 ! urxvt extensions:
-! sudo wget -O /usr/lib/urxvt/perl/tabbedex https://raw.github.com/mbfisher/urxvt-tabbedex/master/tabbedex
+! wget -O /usr/lib/urxvt/perl/tabbedex https://raw.github.com/mbfisher/urxvt-tabbedex/master/tabbedex
 URxvt.perl-ext-common: default,clipboard
 
 ! urxvt clipboard
-! sudo wget -O /usr/lib/urxvt/perl/clipboard https://raw.github.com/muennich/urxvt-perls/master/clipboard
+! pacman -S xsel && wget -O /usr/lib/urxvt/perl/clipboard https://raw.github.com/muennich/urxvt-perls/master/clipboard
 URxvt.keysym.M-c: perl:clipboard:copy
 URxvt.keysym.M-v: perl:clipboard:paste
 

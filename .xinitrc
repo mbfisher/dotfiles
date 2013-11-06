@@ -12,8 +12,10 @@ if [ -d /etc/X11/xinit/xinitrc.d ]; then
 fi
 
 # Load extra fonts
-xset +fp /usr/share/fonts/local
-xset fp rehash
+if [ -d /usr/share/fonts/local ] ; then
+    xset +fp /usr/share/fonts/local
+    xset fp rehash
+fi
 
 # Read Xresources config
 xrdb -merge ~/.Xresources
@@ -23,15 +25,11 @@ xmodmap ~/.Xmodmap
 
 # Dim screen
 xbacklight -set 50
-
-# Set up dual screen
-xrandr --output LVDS1 --mode 1366x768
-if xrandr | grep "HDMI1 connected" ; then
-  xrandr --output HDMI1 --mode 1920x1080
-  xrandr --output HDMI1 --left-of LVDS1
-fi
+[ -e ~/.monitors.ini ] && ~/bin/monitors.py
 
 # Run utilities
 parcellite &
+udiskie >> ~/log/udiskie.log 2>&1 &
 
-exec awesome
+
+exec awesome > ~/.awesome.log 2>&1
