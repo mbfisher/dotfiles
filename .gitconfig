@@ -4,11 +4,19 @@
 [core]
 	excludesfile = /home/mbfisher/.gitignore
 [alias]
+    l = log -p --no-merges
+    a = add --all .
+    c = commit
+    d = diff
+    ds = diff --staged
+    s = status
 	diff = diff --color
 	orig = "!find . -type f -name \"*.orig\" -exec rm -i {} \\;"
     add = add --all .
     ffs = flow feature start
     fff = flow feature finish
+    tkt-create = "!f() { git push origin $1:refs/heads/tkt-$2 ; git fetch origin ; git checkout --track -b tkt-$2 origin/tkt-$2 ; }; f"
+    tkt-pull = "!f() { git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
 [push]
 	default = simple
 [pull]

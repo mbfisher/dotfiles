@@ -42,7 +42,6 @@ imap <down> <nop>
 imap <left> <nop>
 imap <right> <nop>
 
-
 " One character insert
 nmap <Space> i_<Esc>r
 nmap <S-Space> a_<Esc>r
@@ -101,5 +100,3 @@ colorscheme solarized
 
 " command-t
 let g:CommandTAcceptSelectionTabMap = '<CR>'
-
-runtime! plugin/sensible.vim

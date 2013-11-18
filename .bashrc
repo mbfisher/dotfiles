@@ -70,4 +70,4 @@ export -f pyv
 set -o vi
 
 # Activate RVM
-source ~/.rvm/scripts/rvm
+#source ~/.rvm/scripts/rvm

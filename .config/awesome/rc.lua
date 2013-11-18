@@ -1,18 +1,20 @@
 -- Standard awesome library
-local gears = require("gears")
+-- GLOBAL
 local awful = require("awful")
 awful.rules = require("awful.rules")
 require("awful.autofocus")
 
--- Widget and layout library
-local wibox = require("wibox")
+local gears = require("gears")
 
 -- Theme handling library
 local beautiful = require("beautiful")
 
--- Notification library
-local naughty = require("naughty")
+local naughty = require('naughty')
 local menubar = require("menubar")
+
+local wibox = require('wibox')
+
+local shifty = require("shifty")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -42,6 +44,11 @@ end
 -- {{{ Variable definitions
 -- Themes define colours, icons, and wallpapers
 beautiful.init(awful.util.getdir('config') .. '/themes/mbfisher/theme.lua')
+if beautiful.wallpaper then
+    for s = 1, screen.count() do
+        gears.wallpaper.maximized(beautiful.wallpaper[s], s, true)
+    end
+end
 
 -- This is used later as the default terminal and editor to run.
 terminal = "urxvt"
@@ -56,7 +63,8 @@ editor_cmd = terminal .. " -e " .. editor
 modkey = "Mod3"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
-local layouts =
+-- GLOBAL
+layouts =
 {
     awful.layout.suit.floating,
     awful.layout.suit.tile,
@@ -74,28 +82,62 @@ local layouts =
 -- }}}
 
 -- {{{ Tags
---[[local tyrannical = require("tyrannical")
-local term_classes = { 
-    'xterm', 'XTerm', 'urxvt', 'URxvt', 'gnome-terminal', 'terminator'
-}
-tyrannical.tags = {
-    {
-        name = "local", -- Call the tag "Term"
-        init = true, -- Load the tag on startup
-        exclusive = true, -- Refuse any other type of clients (by classes)
-        screen = 1, -- Create this tag on screen 1 and screen 2
-        layout = awful.layout.suit.tile, -- Use the tile layout
-        class = term_classes --Accept the following classes, refuse everything else (because of "exclusive=true")
-}--]]
 
-tags = {
-    { awful.tag({ 'local', 'remote' }, 1, awful.layout.suit.tile) },
-    { awful.tag({ 'web', 'chat' }, 2, {awful.layout.suit.floating, awful.layout.suit.tile}) }
+--[[
+layout        = func   -- a layout from awful.layout.suit (e.g. awful.layout.suit.tile)
+mwfact        = float  -- how big the master window is
+nmaster       = int    -- how many columns for master windows
+ncol          = int    -- how many columns for non-master windows
+exclusive     = bool   -- if true, only clients from rules (config.apps) allowed in this tag
+persist       = bool   -- persist after no apps are in it
+nopopup       = bool   -- do not focus on creation
+leave_kills   = bool   -- if true, tag won't be deleted until unselected
+position      = int    -- determines position in taglist (then what does index do?)
+icon          = string -- image file for icon
+icon_only     = bool   -- if true, no text (just icon)
+init          = bool   -- if true, create on startup (implies persist)
+sweep_delay   = int    -- ???
+keys          = {}     -- a table of keys, which are associated with the tag
+overload_keys = {}     -- ???
+index         = int    -- ???
+rel_index     = int    -- ???
+run           = func   -- a lua function which is execute on tag creation
+spawn         = string -- shell command which is execute on tag creation (ex. a programm)
+screen        = int    -- which screen to spawn on (see above)
+max_clients   = int    -- if more than this many clients are started, then a new tag is made
+]]--
+
+shifty.config.tags = {
+    ['sys'] = {
+        init = true,
+        layout = awful.layout.suit.tile,
+        position = 1,
+        screen = 1,
+        spawn = terminal
+    },
+    ['www'] = {
+        init = true,
+        layout = awful.layout.suit.floating,
+        persist = false,
+        position = 1,
+        screen = 2,
+        exclusive = true
+    }
 }
+
+shifty.config.apps = {
+    {
+        match = { 'chromium' },
+        tag = 'www'
+    }
+}
+
+
 -- }}}
 
 -- {{{ Menu
 -- Create a laucher widget and a main menu
+
 awesomemenu = {
    { "manual", terminal .. " -e man awesome" },
    { "edit config", editor_cmd .. " " .. awesome.conffile },
@@ -118,6 +160,7 @@ launcher = awful.widget.launcher({
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
 -- }}}
+
 
 -- {{{ Wibox
 -- Create a textclock widget
@@ -213,6 +256,7 @@ for s = 1, screen.count() do
 end
 -- }}}
 
+
 -- {{{ Mouse bindings
 root.buttons(awful.util.table.join(
     awful.button({ }, 3, function () mainmenu:toggle() end),
@@ -227,9 +271,11 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
     awful.key({ modkey,           }, 'Up',     function () awful.screen.focus_relative(1) end    ),
     awful.key({ modkey,           }, 'Down',   function () awful.screen.focus_relative(-1) end   ),
-    awful.key({ modkey,           }, 'F1',     function () awful.screen.focus(1) end    ),
-    awful.key({ modkey,           }, 'F2',     function () awful.screen.focus(2) end   ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
+
+    awful.key({modkey}, "a", shifty.add),
+    awful.key({modkey, "Shift"}, "r", shifty.rename), 
+    awful.key({modkey, "Shift"}, "d", shifty.del), 
 
     awful.key({ modkey,           }, "j",
         function ()
@@ -241,7 +287,6 @@ globalkeys = awful.util.table.join(
             awful.client.focus.byidx(-1)
             if client.focus then client.focus:raise() end
         end),
-    awful.key({ modkey,           }, "w", function () mainmenu:show() end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
@@ -355,26 +400,22 @@ clientbuttons = awful.util.table.join(
 
 -- Set keys
 root.keys(globalkeys)
+shifty.config.clientkeys = clientkeys
 -- }}}
 
 -- {{{ Rules
 awful.rules.rules = {
     -- All clients will match this rule.
-    { rule = { },
-      properties = { border_width = beautiful.border_width,
-                     border_color = beautiful.border_normal,
-                     focus = awful.client.focus.filter,
-                     keys = clientkeys,
-                     buttons = clientbuttons } },
-    { rule = { class = "MPlayer" },
-      properties = { floating = true } },
-    { rule = { class = "pinentry" },
-      properties = { floating = true } },
-    { rule = { class = "gimp" },
-      properties = { floating = true } },
-    -- Set Firefox to always map on tags number 2 of screen 1.
-    -- { rule = { class = "Firefox" },
-    --   properties = { tag = tags[1][2] } },
+    {
+        rule = {},
+        properties = {
+            border_width = beautiful.border_width,
+            border_color = beautiful.border_normal,
+            focus = awful.client.focus.filter,
+            keys = clientkeys,
+            buttons = clientbuttons
+        }
+    }
 }
 -- }}}
 
@@ -450,3 +491,6 @@ end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
+
+shifty.taglist = mytaglist
+shifty.init()

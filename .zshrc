@@ -38,6 +38,7 @@ DISABLE_CORRECTION="true"
 DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python
+export WORKON_HOME=~/.virtualenvs
 alias yaourt="yaourt --noconfirm"
 
 
@@ -61,3 +62,5 @@ bindkey "^[[7~" beginning-of-line
 bindkey "^[[8~" end-of-line
 
 #export DISABLE_AUTO_TITLE=true
+
+source ~/.rvm/scripts/rvm
