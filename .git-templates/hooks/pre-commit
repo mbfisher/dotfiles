@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Validate composer.json files
+for c in $(find . -type f -name composer.json | grep -v vendor) ; do
+    echo "Validating $c"
+    if ! composer -d=$(dirname $c) validate ; then
+        exit 1
+    fi
+done
