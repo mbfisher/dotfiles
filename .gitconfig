@@ -1,6 +1,6 @@
 [user]
 	name = Mike Fisher
-	email = mike@mbfisher.com
+	email = michael.fisher@bskyb.com
 [core]
 	excludesfile = /home/mbfisher/.gitignore
 [alias]
@@ -15,7 +15,7 @@
     add = add --all .
     ffs = flow feature start
     fff = flow feature finish
-    tkt-create = "!f() { git push origin $1:refs/heads/tkt-$2 ; git fetch origin ; git checkout --track -b tkt-$2 origin/tkt-$2 ; }; f"
+    tkt-create = "!f() { git push origin master:refs/heads/tkt-$1 ; git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
     tkt-pull = "!f() { git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
 [push]
 	default = simple
@@ -23,3 +23,6 @@
     default = simple
 [merge]
 	tool = meld
+
+[init]
+    templatedir = ~/.git-templates

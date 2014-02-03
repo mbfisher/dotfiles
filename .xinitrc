@@ -32,4 +32,5 @@ parcellite &
 udiskie >> ~/log/udiskie.log 2>&1 &
 
 
-exec awesome > ~/.awesome.log 2>&1
+exec i3
+#exec awesome > ~/.awesome.log 2>&1
