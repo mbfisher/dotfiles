@@ -21,3 +21,5 @@ function mr {
 function vm {
     cd ~/git-projects/chef-solo && vagrant $@ && cd -
 }
+
+alias ll='ls -lah'

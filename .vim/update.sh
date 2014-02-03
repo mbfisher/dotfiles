@@ -8,7 +8,10 @@ goldfeld/vim-seek
 tpope/vim-sensible
 tpope/vim-surround
 altercation/vim-colors-solarized
-wincent/Command-T"
+wincent/Command-T
+tobyS/pdv
+tobyS/vmustache
+SirVer/ultisnips"
 
 mkdir -p ~/.vim/bundle ~/.vim/autoload
 
