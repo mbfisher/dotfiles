@@ -18,19 +18,23 @@ if [ -d /usr/share/fonts/local ] ; then
 fi
 
 # Read Xresources config
-xrdb -merge ~/.Xresources
+xrdb -merge ~/.Xdefaults
+feh --bg-fill ~/wallpaper/cubes.jpg
 
 # Read Xmodmap
-xmodmap ~/.Xmodmap
-
-# Dim screen
-xbacklight -set 50
-[ -e ~/.monitors.ini ] && ~/bin/monitors.py
+#xmodmap ~/.Xmodmap
 
 # Run utilities
-parcellite &
-udiskie >> ~/log/udiskie.log 2>&1 &
+nm-applet &
+sudo python2 ~/bin/hotkeys.py & 2>&1 > ~/hotkeys.log
 
+# Start dbus
+source /etc/X11/xinit/xinitrc.d/30-dbus
+
+eval $(/usr/bin/gnome-keyring-daemon --start --components=gpg,pkcs11,secrets,ssh)
+export SSH_AUTH_SOCK
+export GPG_AGENT_INFO
+export GNOME_KEYRING_CONTROL
+export GNOME_KEYRING_PID
 
 exec i3
-#exec awesome > ~/.awesome.log 2>&1

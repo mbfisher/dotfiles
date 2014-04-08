@@ -1,0 +1,72 @@
+URxvt.font: xft:Inconsolata:size=11
+
+URxvt.iconFile: /home/mbfisher/.local/icons/utilities-terminal.png
+
+! urxvt extensions:
+! wget -O /usr/lib/urxvt/perl/tabbedex https://raw.github.com/mbfisher/urxvt-tabbedex/master/tabbedex
+URxvt.perl-ext-common: default,clipboard
+
+! urxvt clipboard
+! pacman -S xsel && wget -O /usr/lib/urxvt/perl/clipboard https://raw.github.com/muennich/urxvt-perls/master/clipboard
+URxvt.keysym.Mod4-c: perl:clipboard:copy
+URxvt.keysym.Mod4-v: perl:clipboard:paste
+
+! urxvt scrollbar
+URxvt*scrollBar: false
+
+! Transparency
+URxvt.transparent: true
+URxvt.shading: 20
+!URxvt.background: #2B2B2B
+!URxvt.foreground: #E3E3E3
+
+!color0 	(black) 	= Black
+!color1 	(red) 	        = Red3
+!color2 	(green) 	= Green3
+!color3 	(yellow) 	= Yellow3
+!color4 	(blue) 	        = Blue3
+!color5 	(magenta) 	= Magenta3
+!color6 	(cyan) 	        = Cyan3
+!color7 	(white) 	= AntiqueWhite
+!color8 	(bright black) 	= Grey25
+!color9 	(bright red) 	= Red
+!color10 (bright green) 	= Green
+!color11 (bright yellow) = Yellow
+!color12 (bright blue) 	= Blue
+!color13 (bright magenta)= Magenta
+!color14 (bright cyan) 	= Cyan
+!color15 (bright white) 	= White
+!foreground 		= Black
+!background 		= White
+
+! Tango color palette
+URxvt*background:         #2e3436
+URxvt*foreground:         #eeeeec
+! foreground color for underline
+URxvt*colorUL:            #8ae234
+! line color for underline
+URxvt*underlineColor:     #92659a
+! black dark/light
+URxvt*color0:             #2e3436
+URxvt*color8:             #6e706b
+! red dark/light
+URxvt*color1:             #cc0000
+URxvt*color9:             #ef2929
+! green dark/light
+URxvt*color2:             #4e9a06
+URxvt*color10:            #8ae234
+! yellow dark/light
+URxvt*color3:             #edd400
+URxvt*color11:            #fce94f
+! blue dark/light
+URxvt*color4:             #3465a4
+URxvt*color12:            #729fcf
+! magenta dark/light
+URxvt*color5:             #92659a
+URxvt*color13:            #c19fbe
+! cyan dark/light
+URxvt*color6:             #07c7ca
+URxvt*color14:            #63e9e9
+! white dark/light
+URxvt*color7:             #d3d7cf
+URxvt*color15:            #eeeeec

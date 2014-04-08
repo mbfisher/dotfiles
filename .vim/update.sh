@@ -1,7 +1,6 @@
 #!/bin/bash
 
 BUNDLES="scrooloose/syntastic
-stephpy/vim-php-cs-fixer
 Lokaltog/vim-powerline
 tpope/vim-repeat
 goldfeld/vim-seek
@@ -9,9 +8,10 @@ tpope/vim-sensible
 tpope/vim-surround
 altercation/vim-colors-solarized
 wincent/Command-T
-tobyS/pdv
-tobyS/vmustache
-SirVer/ultisnips"
+mustache/vim-mustache-handlebars
+stephpy/vim-php-cs-fixer
+tomasr/molokai
+Floobits/floobits-vim"
 
 mkdir -p ~/.vim/bundle ~/.vim/autoload
 

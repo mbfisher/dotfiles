@@ -6,14 +6,17 @@ filetype plugin indent on
 " Show line numbers
 set number
 
-" Use 256 colours
-set t_Co=256
+colorscheme molokai
+" molokai kellys jellybeans
+highlight Normal ctermbg=None
 
 " Treat .t files as Perl scripts
 au BufNewFile,BufRead *.t set filetype=perl
 au BufNewFile,BufRead *.rst set filetype=rst
 au BufNewFile,BufRead *.less set filetype=css
 au BufNewFile,BufRead Capfile set filetype=ruby
+au BufNewFile,BufRead *.tache set filetype=mustache
+au BufNewFile,BufRead Taskfile set filetype=php
 
 " Set indents
 set ts=4 sw=4 sts=4 expandtab
@@ -23,14 +26,11 @@ autocmd FileType python match ErrorMsg '\%>79v.\+'
 " reStructuredText
 autocmd FileType rst :setlocal ts=3 sw=3 sts=3 tw=79
 " JSON
-au BufNewFile,BufRead *.json :setlocal ts=2 sw=2 sts=2
+au BufNewFile,BufRead *.json :setlocal ts=4 sw=4 sts=4
 " HTML
 autocmd FileType html :setlocal ts=2 sw=2 sts=2
 " YAML
 autocmd FileType yaml :setlocal ts=2 sw=2 sts=2
-
-" NERDTree shortcut
-:nmap \e :NERDTreeToggle<CR>
 
 " Disable arrow keys
 map <up> <nop>
@@ -46,32 +46,12 @@ imap <right> <nop>
 nmap <Space> i_<Esc>r
 nmap <S-Space> a_<Esc>r
 
-" Move tab
-function TabLeft()
-  let tab_number = tabpagenr() - 1
-  if tab_number == 0
-    execute "tabm" tabpagenr('$') - 1
-  else
-    execute "tabm" tab_number - 1
-  endif
-endfunction
-
-function TabRight()
-  let tab_number = tabpagenr() - 1
-  let last_tab_number = tabpagenr('$') - 1
-  if tab_number == last_tab_number
-    execute "tabm" 0
-  else
-    execute "tabm" tab_number + 1
-  endif
-endfunction
-
-map <Up> :execute TabRight()<CR>
-map <Down> :execute TabLeft()<CR>
-
-" Swtich tab
+" Switch tab
 map <Left> gT
 map <Right> gt
+" Move tab
+nnoremap <silent> <Down> :execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
+nnoremap <silent> <Up> :execute 'silent! tabmove ' . tabpagenr()<CR>
 
 " Set tab label format
 :set guitablabel=%t%m
@@ -95,8 +75,17 @@ set undodir^=~/.vim/undo
 set dir=~/.vim/.swp
 
 " Colour scheme
-set background=dark
-colorscheme solarized
+" colorscheme charon
 
 " command-t
+map OA <Up>
+map OB <Down>
+map OD <Left>
+map OC <Right>
 let g:CommandTAcceptSelectionTabMap = '<CR>'
+
+
+map <c-j> :s/(/(\r        /g<CR>:s/, /,\r        /g<CR>:s/)/)\r    /<CR>
+
+let g:phpqa_codecoverage_file="tests/reports/clover.xml"
+let g:phpqa_codecoverage_showcovered = 0
