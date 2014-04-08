@@ -55,10 +55,13 @@ bindsym $mod+Shift+l move up
 bindsym $mod+Shift+semicolon move right
 
 # alternatively, you can use the cursor keys:
-bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Left move workspace to output left
 bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
-bindsym $mod+Shift+Right move right
+bindsym $mod+Shift+Right move workspace to output right
+
+bindsym $mod+z exec xrandr --output DP-1 --mode 1680x1050 --right-of LVDS-1
+bindsym $mod+Shift+z exec xrandr --output DP-1 --off
 
 # split in horizontal orientation
 bindsym $mod+h split h
@@ -148,3 +151,10 @@ bindsym $mod+r mode "resize"
 bar {
         status_command i3status
 }
+
+#* use 'exec gnome-session-quit --logout'    : logout dialog
+#* use 'exec gnome-session-quit --power-off' : shutdown menu
+#If you have gnome-screensaver installed and want to use it:
+#* use 'exec gnome-screensaver-command -l'   : locks the screen
+#
+new_window 1pixel

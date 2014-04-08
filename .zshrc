@@ -54,6 +54,23 @@ source $ZSH/oh-my-zsh.sh
 
 setopt no_share_history
 
+# Set $PATH
+path+=/usr/local/heroku/bin
+path+=$HOME/bin
+path+=$HOME/.local/bin
+path+=$HOME/src/google_appengine
+path+=$HOME/perl5/bin
+path+=/opt/vagrant/bin
+path+=$HOME/.npm/bin
+path+=$HOME/.composer/vendor/bin
+path+=$HOME/.phpenv/bin
+
+# Strip out $PATH dirs that don't exist
+path=($^path(N))
+
+# Remove duplicates from $PATH
+typeset -U path
+
 export EDITOR="vim"
 export BROWSER="chromium"
 
@@ -63,4 +80,5 @@ bindkey "^[[8~" end-of-line
 
 #export DISABLE_AUTO_TITLE=true
 
+eval "$(phpenv init -)"
 source ~/.rvm/scripts/rvm

@@ -7,6 +7,7 @@ path+=$HOME/perl5/bin
 path+=/opt/vagrant/bin
 path+=$HOME/.npm/bin
 path+=$HOME/.composer/vendor/bin
+path+=$HOME/.phpenv/bin
 
 # Strip out $PATH dirs that don't exist
 path=($^path(N))

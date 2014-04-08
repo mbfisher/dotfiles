@@ -1,10 +1,4 @@
 *.swp
 *~
 *.pyc
-*.lock
-/conf/deployrc
-/conf/deploy-clean
-vendor/
-composer
-composer.phar
 venv/
