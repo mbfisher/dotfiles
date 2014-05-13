@@ -1,4 +1,4 @@
-if [ -z ~/.oh-my-zsh ] ; then
+if [ ! -d ~/.oh-my-zsh ] ; then
     git clone https://github.com/robbyrussell/oh-my-zsh ~/.oh-my-zsh
 else
     GIT_DIR=~/.oh-my-zsh/.git git pull origin master
