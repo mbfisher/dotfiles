@@ -60,7 +60,7 @@ bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move workspace to output right
 
-bindsym $mod+z exec xrandr --output DP-1 --mode 1680x1050 --right-of LVDS-1
+bindsym $mod+z exec "xrandr --output DP-1 --mode 1680x1050 --right-of LVDS-1; feh --bg-fill ~/wallpaper/cubes.jpg"
 bindsym $mod+Shift+z exec xrandr --output DP-1 --off
 
 # split in horizontal orientation

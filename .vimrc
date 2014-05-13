@@ -2,6 +2,7 @@
 execute pathogen#infect()
 syntax on
 filetype plugin indent on
+set nowritebackup
 
 " Show line numbers
 set number
@@ -31,6 +32,8 @@ au BufNewFile,BufRead *.json :setlocal ts=4 sw=4 sts=4
 autocmd FileType html :setlocal ts=2 sw=2 sts=2
 " YAML
 autocmd FileType yaml :setlocal ts=2 sw=2 sts=2
+" tache
+autocmd FileType mustache :setlocal ts=2 sw=2 sts=2
 
 " Disable arrow keys
 map <up> <nop>
@@ -57,7 +60,7 @@ nnoremap <silent> <Up> :execute 'silent! tabmove ' . tabpagenr()<CR>
 :set guitablabel=%t%m
 
 " Enable folding for PHP
-let php_folding=1
+" let php_folding=1
 
 set nobackup
 
