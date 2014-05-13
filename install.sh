@@ -13,4 +13,4 @@ for FILE in $FILES ; do
     ln -sf $PWD/$FILE ~/$FILE
 done
 
-cd $HOME/.vim && ./update.sh && cd -
+cd ~/.vim && ./update.sh && cd -
