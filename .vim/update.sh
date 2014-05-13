@@ -11,7 +11,8 @@ wincent/Command-T
 mustache/vim-mustache-handlebars
 stephpy/vim-php-cs-fixer
 tomasr/molokai
-Floobits/floobits-vim"
+Floobits/floobits-vim
+airblade/vim-gitgutter"
 
 mkdir -p ~/.vim/bundle ~/.vim/autoload
 
