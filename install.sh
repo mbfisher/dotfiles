@@ -19,7 +19,10 @@ for FILE in $FILES ; do
     ln -sf $PWD/$FILE ~/$FILE
 done
 
+mkdir ~/.vim/.swp
 mkdir -p ~/.vim/autoload ~/.vim/bundle && \
     curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
-cd ~/.vim && ./update.sh && cd -
-mkdir ~/.vim/.swp
+
+cd ~/.vim && ./update.sh; cd -
+
+cd ~/.vim/bundle/Command-T/ruby/command-t/ && /usr/bin/ruby extconf.rb && make; cd -
