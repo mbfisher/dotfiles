@@ -4,7 +4,13 @@ else
     GIT_DIR=~/.oh-my-zsh/.git git pull origin master
 fi
 
-FILES=`find -type f | grep -v ".git/\|README\|install.sh" | sed 's/^\.\///' | grep "$1"`
+if uname -a | grep Darwin ; then
+    FIND="find ."
+else
+    FIND="find -type f"
+fi
+
+FILES=`$FIND | grep -v ".git/\|README\|install.sh" | sed 's/^\.\///' | grep "$1"`
 
 for FILE in $FILES ; do
     echo Installing $FILE
