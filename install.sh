@@ -19,4 +19,7 @@ for FILE in $FILES ; do
     ln -sf $PWD/$FILE ~/$FILE
 done
 
+mkdir -p ~/.vim/autoload ~/.vim/bundle && \
+    curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 cd ~/.vim && ./update.sh && cd -
+mkdir ~/.vim/.swp
