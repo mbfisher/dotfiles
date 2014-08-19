@@ -1,4 +1,7 @@
-# Set $PATH
+# Prepend to PATH
+path=(/usr/local/bin $path)
+
+# Append to PATH
 path+=/usr/local/heroku/bin
 path+=$HOME/bin
 path+=$HOME/.local/bin
@@ -11,9 +14,6 @@ path+=$HOME/.phpenv/bin
 
 # Strip out $PATH dirs that don't exist
 path=($^path(N))
-
-# Remove duplicates from $PATH
-typeset -U path
 
 function mr {
   mv $1 `dirname $1`/$2
