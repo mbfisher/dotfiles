@@ -92,3 +92,8 @@ map <c-j> :s/(/(\r        /g<CR>:s/, /,\r        /g<CR>:s/)/)\r    /<CR>
 
 let g:phpqa_codecoverage_file="tests/reports/clover.xml"
 let g:phpqa_codecoverage_showcovered = 0
+
+let g:ctrlp_prompt_mappings = {
+    \ 'AcceptSelection("e")': ['<c-t>'],
+    \ 'AcceptSelection("t")': ['<cr>', '<2-LeftMouse>'],
+    \ }
