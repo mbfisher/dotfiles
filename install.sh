@@ -4,8 +4,8 @@ else
     GIT_DIR=~/.oh-my-zsh/.git git pull origin master
 fi
 
-if uname -a | grep Darwin ; then
-    FIND="find ."
+if uname -a | grep Darwin >/dev/null; then
+    FIND="find . -type f"
 else
     FIND="find -type f"
 fi
@@ -16,6 +16,7 @@ for FILE in $FILES ; do
     echo Installing $FILE
     rm -f ~/$FILE
     mkdir -p ~/`dirname $FILE`
+    echo "$PWD/$FILE ~/$FILE"
     ln -sf $PWD/$FILE ~/$FILE
 done
 
