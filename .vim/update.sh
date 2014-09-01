@@ -7,11 +7,12 @@ goldfeld/vim-seek
 tpope/vim-sensible
 tpope/vim-surround
 altercation/vim-colors-solarized
-wincent/Command-T
 mustache/vim-mustache-handlebars
 stephpy/vim-php-cs-fixer
 tomasr/molokai
-airblade/vim-gitgutter"
+airblade/vim-gitgutter
+docteurklein/php-getter-setter.vim
+kien/ctrlp.vim"
 
 mkdir -p ~/.vim/bundle ~/.vim/autoload
 
