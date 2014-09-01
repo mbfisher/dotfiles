@@ -83,3 +83,6 @@ bindkey "^[[8~" end-of-line
 eval "$(phpenv init -)"
 source ~/.rvm/scripts/rvm
 source /usr/bin/activate.sh
+
+# added by travis gem
+[ -f /Users/mif08/.travis/travis.sh ] && source /Users/mif08/.travis/travis.sh
