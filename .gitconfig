@@ -13,6 +13,7 @@
     ps = push
     pt = push --tags
     pl = pull
+    pr = pull --rebase
 	diff = diff --color
 	orig = "!find . -type f -name \"*.orig\" -exec rm -i {} \\;"
     add = add --all .
