@@ -30,3 +30,5 @@
 
 [init]
     templatedir = ~/.git-templates
+[diff]
+	tool = vimdiff
