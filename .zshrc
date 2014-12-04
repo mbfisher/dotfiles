@@ -74,15 +74,11 @@ typeset -U path
 export EDITOR="vim"
 export BROWSER="chromium"
 
-#bindkey -v
 bindkey "^[[7~" beginning-of-line
 bindkey "^[[8~" end-of-line
 
-#export DISABLE_AUTO_TITLE=true
-
-eval "$(phpenv init -)"
-source ~/.rvm/scripts/rvm
-source /usr/bin/activate.sh
-
 # added by travis gem
 [ -f /Users/mif08/.travis/travis.sh ] && source /Users/mif08/.travis/travis.sh
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
