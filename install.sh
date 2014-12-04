@@ -25,5 +25,3 @@ mkdir -p ~/.vim/autoload ~/.vim/bundle && \
     curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 cd ~/.vim && ./update.sh; cd -
-
-cd ~/.vim/bundle/Command-T/ruby/command-t/ && /usr/bin/ruby extconf.rb && make; cd -
