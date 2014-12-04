@@ -12,7 +12,12 @@ stephpy/vim-php-cs-fixer
 tomasr/molokai
 airblade/vim-gitgutter
 docteurklein/php-getter-setter.vim
-kien/ctrlp.vim"
+kien/ctrlp.vim
+mtth/locate.vim
+nathanaelkane/vim-indent-guides
+chase/vim-ansible-yaml
+kchmck/vim-coffee-script
+mxw/vim-jsx"
 
 mkdir -p ~/.vim/bundle ~/.vim/autoload
 
