@@ -1,7 +1,6 @@
 " Pathogen
 execute pathogen#infect()
 syntax on
-filetype plugin indent on
 set nowritebackup
 
 " Show line numbers
@@ -20,20 +19,21 @@ au BufNewFile,BufRead *.tache set filetype=mustache
 au BufNewFile,BufRead Taskfile set filetype=php
 
 " Set indents
-set ts=4 sw=4 sts=4 expandtab
-" Python
-autocmd FileType python :setlocal ts=4 sw=4 sts=4
-autocmd FileType python match ErrorMsg '\%>79v.\+'
+set expandtab
+" If 'expandtab' is set, pressing <TAB> will insert 'softtabstop' amount of
+" space characters
+set softtabstop=4
+" Affects >>, <<,  == and autoindenting
+set shiftwidth=4
+" Sets indent rules per filetype
+filetype plugin indent on
+
 " reStructuredText
 autocmd FileType rst :setlocal ts=3 sw=3 sts=3 tw=79
-" JSON
-au BufNewFile,BufRead *.json :setlocal ts=4 sw=4 sts=4
 " HTML
 autocmd FileType html :setlocal ts=2 sw=2 sts=2
 " YAML
-autocmd FileType yaml :setlocal ts=2 sw=2 sts=2
-" tache
-autocmd FileType mustache :setlocal ts=2 sw=2 sts=2
+autocmd FileType yaml :setlocal shiftwidth=2 softtabstop=2
 
 " Disable arrow keys
 map <up> <nop>
