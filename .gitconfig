@@ -1,8 +1,8 @@
 [user]
-	name = Mike Fisher
-	email = michael.fisher@bskyb.com
+    name = Mike Fisher
+    email = mike@mbfisher.com
 [core]
-	excludesfile = /home/mbfisher/.gitignore
+    excludesfile = /home/mbfisher/.gitignore
 [alias]
     l = log -p --no-merges
     a = add --all .
@@ -22,13 +22,13 @@
     tkt-create = "!f() { git push origin master:refs/heads/tkt-$1 ; git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
     tkt-pull = "!f() { git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
 [push]
-	default = simple
+    default = current
 [pull]
-    default = simple
+    default = current
 [merge]
-	tool = meld
+    tool = meld
 
 [init]
     templatedir = ~/.git-templates
 [diff]
-	tool = vimdiff
+    tool = vimdiff

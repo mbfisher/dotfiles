@@ -19,8 +19,4 @@ function mr {
   mv $1 `dirname $1`/$2
 }
 
-function vm {
-    cd ~/git-projects/chef-solo && vagrant $@ && cd -
-}
-
 alias ll='ls -lah'

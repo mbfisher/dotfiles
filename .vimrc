@@ -34,6 +34,8 @@ autocmd FileType rst :setlocal ts=3 sw=3 sts=3 tw=79
 autocmd FileType html :setlocal ts=2 sw=2 sts=2
 " YAML
 autocmd FileType yaml :setlocal shiftwidth=2 softtabstop=2
+" Ruby
+autocmd FileType ruby :setlocal ts=2 sw=2 sts=2
 
 " Disable arrow keys
 map <up> <nop>
