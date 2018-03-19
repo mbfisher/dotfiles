@@ -11,6 +11,7 @@
     ds = diff --staged
     s = status
     ps = push
+    pf = push -f
     pt = push --tags
     pl = pull
     pr = pull --rebase

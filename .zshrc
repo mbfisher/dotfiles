@@ -40,12 +40,10 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
-which rbenv > /dev/null && eval "$(rbenv init -)"
-
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git composer systemd mercurial)
+plugins=(git systemd osx dotenv)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -79,4 +77,12 @@ export BROWSER="chromium"
 bindkey "^[[7~" beginning-of-line
 bindkey "^[[8~" end-of-line
 
-docker-machine ls | grep default && [ "$(docker-machine status default)" = "Running" ] && eval $(docker-machine env default)
+# tabtab source for serverless package
+# uninstall by removing these lines or running `tabtab uninstall serverless`
+[[ -f /Users/mbfisher/.npm/lib/node_modules/serverless/node_modules/tabtab/.completions/serverless.zsh ]] && . /Users/mbfisher/.npm/lib/node_modules/serverless/node_modules/tabtab/.completions/serverless.zsh
+# tabtab source for sls package
+# uninstall by removing these lines or running `tabtab uninstall sls`
+[[ -f /Users/mbfisher/.npm/lib/node_modules/serverless/node_modules/tabtab/.completions/sls.zsh ]] && . /Users/mbfisher/.npm/lib/node_modules/serverless/node_modules/tabtab/.completions/sls.zsh
+
+export NVM_DIR="$HOME/.nvm"
+. "/usr/local/opt/nvm/nvm.sh"

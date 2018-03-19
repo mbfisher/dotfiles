@@ -20,8 +20,8 @@ for FILE in $FILES ; do
     ln -sf $PWD/$FILE ~/$FILE
 done
 
-mkdir ~/.vim/.swp
-mkdir -p ~/.vim/autoload ~/.vim/bundle && \
-    curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+#mkdir ~/.vim/.swp
+#mkdir -p ~/.vim/autoload ~/.vim/bundle && \
+#    curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
-cd ~/.vim && ./update.sh; cd -
+#cd ~/.vim && ./update.sh; cd -
