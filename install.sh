@@ -1,5 +1,5 @@
 if [ ! -d ~/.oh-my-zsh ] ; then
-    git clone https://github.com/robbyrussell/oh-my-zsh ~/.oh-my-zsh
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 else
     git -C ~/.oh-my-zsh pull origin master
 fi
