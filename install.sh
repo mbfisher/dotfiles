@@ -20,6 +20,8 @@ if [ ! -d ~/.oh-my-zsh ]; then
 fi
 
 for FILE in $(./list.sh); do
-    echo "Installing ~/$FILE"
-    ln -sf $PWD/src/$FILE ~/$FILE
+    if [ ! -e ~/$FILE ]; then
+        echo "Installing $FILE"
+        ln -sf $PWD/src/$FILE ~/$FILE
+    fi
 done

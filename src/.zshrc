@@ -9,18 +9,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 ZSH_THEME="spaceship"
 
-SPACESHIP_PROMPT_ADD_NEWLINE="false"
-SPACESHIP_GIT_STATUS_COLOR="yellow"
-
-SPACESHIP_PROMPT_ORDER=(
-  dir
-  git
-  exec_time
-  line_sep
-  jobs
-  exit_code
-  char
-)
+source ~/.spaceship.sh
 
 # Set list of themes to load
 # Setting this variable when ZSH_THEME=random
