@@ -107,6 +107,8 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+alias g="git"
+
 # Set $PATH
 path+=/usr/local/heroku/bin
 path+=/usr/local/sbin
