@@ -2,7 +2,7 @@
     name = Mike Fisher
     email = mike@mbfisher.com
 [core]
-    excludesfile = /home/mbfisher/.gitignore
+    excludesfile = ~/.gitignore
 [alias]
     l = log -p --no-merges
     a = add --all .
@@ -16,20 +16,8 @@
     pl = pull
     pr = pull --rebase
 	diff = diff --color
-	orig = "!find . -type f -name \"*.orig\" -exec rm -i {} \\;"
     add = add --all .
-    ffs = flow feature start
-    fff = flow feature finish
-    tkt-create = "!f() { git push origin master:refs/heads/tkt-$1 ; git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
-    tkt-pull = "!f() { git fetch origin ; git checkout --track -b tkt-$1 origin/tkt-$1 ; }; f"
 [push]
     default = current
 [pull]
     default = current
-[merge]
-    tool = meld
-
-[init]
-    templatedir = ~/.git-templates
-[diff]
-    tool = vimdiff
