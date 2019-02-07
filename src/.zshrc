@@ -63,12 +63,14 @@ source ~/.spaceship.sh
 plugins=(
   osx
   dotenv
+  zsh-syntax-highlighting
 )
 
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
+setopt no_share_history
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
@@ -97,6 +99,7 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 alias g="git"
+alias kb="kubectl"
 
 # Set $PATH
 path+=/usr/local/heroku/bin
