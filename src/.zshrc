@@ -1,6 +1,10 @@
-# Set Spaceship ZSH as a prompt
-autoload -U promptinit; promptinit
-prompt spaceship
+source ~/.antigen.zsh
+antigen bundles <<EOBUNDLES
+  zsh-users/zsh-syntax-highlighting
+  zsh-users/zsh-completions
+EOBUNDLES
+antigen theme denysdovhan/spaceship-prompt
+antigen apply
 
 SPACESHIP_CHAR_SYMBOL="➜  "
 SPACESHIP_PROMPT_ADD_NEWLINE="false"
@@ -9,6 +13,7 @@ SPACESHIP_GIT_STATUS_COLOR="yellow"
 SPACESHIP_PROMPT_ORDER=(
   dir
   git
+  pyenv
   exec_time
   line_sep
   jobs
@@ -42,7 +47,7 @@ typeset -U path
 
 # pyenv
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
+if which pyenv virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
 # nvm
 export NVM_DIR="$HOME/.nvm"

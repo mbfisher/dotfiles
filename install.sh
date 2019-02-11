@@ -1,52 +1,35 @@
 #!/bin/bash
 
-git submodules update
+set -e
 
-if ! which brew; then
-    echo "Installing homebrew"
+if [ ! -d /Library/Developer/CommandLineTools ]; then
+    echo "⏱  Installing command line tools"
+    xcode-select --install
+    sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+fi
+
+if ! which brew > /dev/null; then
+    echo "⏱  Installing homebrew"
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 fi
 
-echo -e "\nInstalling Homebrew packages"
-./scripts/brew.sh
+echo -e "⏱  Installing Homebrew packages"
+# ./scripts/brew.sh
 
-echo -e "\nInstalling Spaceship"
-npm install -g spaceship-prompt
+git submodule update
 
 if ! ls -l ~/Library/Fonts | grep -i powerline > /dev/null; then
-    echo -e "\nInstalling Powerline Fonts"
+    echo "⏱  Installing Powerline Fonts"
     [ ! -d /tmp/powerline-fonts ] && git clone https://github.com/powerline/fonts.git --depth=1 /tmp/powerline-fonts
     /tmp/powerline-fonts/install.sh
 fi
 
-if [ ! -d ~/.oh-my-zsh ]; then
-    echo -e "\nInstalling Oh My Zsh"
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-else
-    echo -e "\nUpdating Oh My Zsh"
-    cd ~/.oh-my-zsh
-    git fetch
-    git reset --hard origin/master
-    cd -
-fi
+echo "⏱  Installing Antigen"
+curl -LSs git.io/antigen > ~/.antigen.zsh
 
-ZSH_CUSTOM=~/.oh-my-zsh/custom
-
-if [ ! -f ${ZSH_CUSTOM} ]; then
-    echo -e "\nInstalling Spaceship"
-    git clone https://github.com/denysdovhan/spaceship-prompt.git "$ZSH_CUSTOM/themes/spaceship"
-    ln -s "$ZSH_CUSTOM/themes/spaceship/spaceship.zsh-theme" "$ZSH_CUSTOM/themes/spaceship.zsh-theme"
-else
-    echo -e "\nUpdating Spaceship"
-    cd "$ZSH_CUSTOM/themes/spaceship"
-    git fetch
-    git reset --hard origin/master
-    cd -
-fi
-
-echo -e "\nConfiguring iTerm"
+echo "⏱  Configuring iTerm"
 defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$PWD/iterm2"
 defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
 
-echo -e "\nInstalling dotfiles"
+echo "⏱  Installing dotfiles"
 ./scripts/dotfiles.sh

@@ -1,0 +1,19 @@
+{
+  "cask": [
+    "visual-studio-code",
+    "iterm2",
+    "spectacle",
+    "jetbrains-toolbox",
+    "docker",
+    "slack",
+    "google-drive-file-stream",
+    "gitkraken"
+  ],
+  "formula": [
+    "findutils",
+    "node",
+    "pyenv",
+    "pyenv-virtualenv",
+    "pstree"
+  ]
+}

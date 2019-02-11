@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+
+const { spawn } = require('child_process');
+const { writeFileSync } = require('fs');
+const { resolve } = require('path');
+
+const args = process.argv.slice(2);
+
+const log = (...args) => console.log('🍻 ', ...args);
+
+const ps = spawn('brew', args, { stdio: 'inherit' });
+
+ps.on('close', code => {
+    if (code !== 0) {
+        return process.exit(code);
+    }
+
+    let isCask = false;
+    if (args[0] === 'cask') {
+        isCask = true;
+        args.shift();
+    }
+
+    const command = args.shift();
+
+    const pkgPath = resolve(__dirname, '../../brew-packages.json');
+    const pkg = require(pkgPath);
+
+    if (['install', 'upgrade'].includes(command)) {
+        const name = args.pop();
+        const key = isCask ? 'cask' : 'formula';
+    
+        if (!pkg[key].includes(name)) {
+            log(`Writing ${name} to brew-packages.${key}`);
+            pkg[key].push(name);
+        }
+    }
+
+    if (command === 'uninstall') {
+        const name = args.pop();
+        const key = isCask ? 'cask' : 'formula';
+
+        if (pkg[key].includes(name)) {
+            log(`Removing ${name} from brew-packages.${key}`);
+            pkg[key] = pkg[key].filter(item => item !== name);
+        }
+    }
+
+    writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+})
