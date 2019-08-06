@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+git fetch
+git reset $(git merge-base origin/develop $(git rev-parse --abbrev-ref HEAD))

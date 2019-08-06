@@ -1,30 +1,3 @@
-source ~/.antigen.zsh
-antigen bundles <<EOBUNDLES
-  zsh-users/zsh-syntax-highlighting
-  zsh-users/zsh-completions
-EOBUNDLES
-antigen theme denysdovhan/spaceship-prompt
-antigen apply
-
-SPACESHIP_CHAR_SYMBOL="➜  "
-SPACESHIP_PROMPT_ADD_NEWLINE="false"
-SPACESHIP_GIT_STATUS_COLOR="yellow"
-
-SPACESHIP_PROMPT_ORDER=(
-  dir
-  git
-  pyenv
-  exec_time
-  line_sep
-  jobs
-  exit_code
-  char
-)
-
-alias l="ls -Glah"
-alias g="git"
-alias kb="kubectl"
-
 # Set $PATH
 path+=/usr/local/heroku/bin
 path+=/usr/local/sbin
@@ -42,6 +15,9 @@ path=($^path(N))
 # starts, the `^path` above will remove it.
 export PATH=./node_modules/.bin:$PATH
 
+# We add these separately to be sure they come first, to override macOS binaries
+export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/Cellar/findutils/4.6.0/libexec/gnubin:/usr/local/Cellar/gnu-tar/1.32/libexec/gnubin:$PATH
+
 # Remove duplicates from $PATH
 typeset -U path
 
@@ -50,5 +26,43 @@ if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 if which pyenv virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 
 # nvm
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+export NVM_AUTO_USE=true NVM_LAZY_LOAD=true
+
+# plugins
+source ~/.antigen.zsh
+
+antigen use oh-my-zsh
+
+antigen bundles <<EOBUNDLES
+  kubectl
+  zsh-users/zsh-syntax-highlighting
+  zsh-users/zsh-completions
+  lukechilds/zsh-nvm
+EOBUNDLES
+
+antigen theme denysdovhan/spaceship-prompt
+antigen apply
+
+SPACESHIP_CHAR_SYMBOL="➜  "
+SPACESHIP_PROMPT_ADD_NEWLINE="false"
+SPACESHIP_GIT_STATUS_COLOR="yellow"
+
+SPACESHIP_PROMPT_ORDER=(
+  dir
+  git
+  pyenv
+#  node
+  exec_time
+  line_sep
+  jobs
+  exit_code
+  char
+)
+
+setopt no_share_history
+
+alias ls="ls --color"
+alias l="ls -Glah"
+alias g="git"
+alias kb="kubectl"
+alias dc="docker-compose"

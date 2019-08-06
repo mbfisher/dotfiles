@@ -7,13 +7,29 @@
     "docker",
     "slack",
     "google-drive-file-stream",
-    "gitkraken"
+    "gitkraken",
+    "copyclip",
+    "plex-media-server",
+    "nordvpn",
+    "transmission",
+    "java",
+    "spotify",
+    "vlc",
+    "insonmia"
   ],
   "formula": [
     "findutils",
     "node",
     "pyenv",
     "pyenv-virtualenv",
-    "pstree"
+    "pstree",
+    "sloc",
+    "tree",
+    "kubernetes-helm",
+    "htop",
+    "mas",
+    "transmission",
+    "coreutils",
+    "gnu-tar"
   ]
 }

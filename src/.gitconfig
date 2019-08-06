@@ -4,7 +4,7 @@
 [core]
     excludesfile = ~/.gitignore
 [alias]
-    l = log -p --no-merges
+    lg = log --decorate --pretty=oneline --abbrev-commit --no-merges --graph
     a = add --all .
     c = commit
     d = diff
@@ -17,7 +17,11 @@
     pr = pull --rebase
 	diff = diff --color
     add = add --all .
+    squash = "! git-squash"
 [push]
     default = current
 [pull]
     default = current
+[rerere]
+	enabled = true
+	autoupdate = true
