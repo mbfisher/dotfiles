@@ -1,3 +1,5 @@
+export ANDROID_HOME=~/Library/Android/sdk
+
 # Set $PATH
 path+=/usr/local/heroku/bin
 path+=/usr/local/sbin
@@ -7,6 +9,9 @@ path+=$HOME/.composer/vendor/bin
 path+=$HOME/.phpenv/bin
 path+=$HOME/anaconda3/bin
 path+=$HOME/.nvm
+path+=$ANDROID_HOME/tools/bin
+path+=$ANDROID_HOME/platform-tools
+path+=$HOME/Library/Python/3.7/bin
 
 # Strip out $PATH dirs that don't exist
 path=($^path(N))
@@ -51,7 +56,7 @@ SPACESHIP_PROMPT_ORDER=(
   dir
   git
   pyenv
-#  node
+  node
   exec_time
   line_sep
   jobs
@@ -66,3 +71,27 @@ alias l="ls -Glah"
 alias g="git"
 alias kb="kubectl"
 alias dc="docker-compose"
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+
+# tabtab source for serverless package
+# uninstall by removing these lines or running `tabtab uninstall serverless`
+[[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/serverless.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/serverless.zsh
+# tabtab source for sls package
+# uninstall by removing these lines or running `tabtab uninstall sls`
+[[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/sls.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/sls.zsh
+# tabtab source for slss package
+# uninstall by removing these lines or running `tabtab uninstall slss`
+[[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/slss.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/slss.zsh
+
+#OktaAWSCLI
+if [[ -f "$HOME/.okta/bash_functions" ]]; then
+    . "$HOME/.okta/bash_functions"
+fi
+if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
+    PATH="$HOME/.okta/bin:$PATH"
+fi
+
+# aws-ask
+export AWS_SDK_LOAD_CONFIG=true AWS_CONFIG_FILE=~/.aws/config

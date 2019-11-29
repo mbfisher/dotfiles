@@ -2,6 +2,8 @@
 
 set -e
 
+git submodule update
+
 if [ ! -d /Library/Developer/CommandLineTools ]; then
     echo "⏱  Installing command line tools"
     xcode-select --install
@@ -14,9 +16,8 @@ if ! which brew > /dev/null; then
 fi
 
 echo -e "⏱  Installing Homebrew packages"
-# ./scripts/brew.sh
 
-git submodule update
+brew install findutils coreutils gnu-tar
 
 if ! ls -l ~/Library/Fonts | grep -i powerline > /dev/null; then
     echo "⏱  Installing Powerline Fonts"
@@ -24,7 +25,8 @@ if ! ls -l ~/Library/Fonts | grep -i powerline > /dev/null; then
     /tmp/powerline-fonts/install.sh
 fi
 
-echo "⏱  Installing Antigen"
+echo "⏱  Installing zsh"
+chsh -s /bin/zsh
 curl -LSs git.io/antigen > ~/.antigen.zsh
 
 echo "⏱  Configuring iTerm"

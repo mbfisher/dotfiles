@@ -4,7 +4,8 @@
 [core]
     excludesfile = ~/.gitignore
 [alias]
-    lg = log --decorate --pretty=oneline --abbrev-commit --no-merges --graph
+    lg = log --graph --pretty=format:'%C(dim)%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --no-merges
+
     a = add --all .
     c = commit
     d = diff
