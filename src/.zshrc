@@ -43,6 +43,7 @@ antigen bundles <<EOBUNDLES
   zsh-users/zsh-syntax-highlighting
   zsh-users/zsh-completions
   lukechilds/zsh-nvm
+  gpg-agent
 EOBUNDLES
 
 antigen theme denysdovhan/spaceship-prompt
@@ -75,6 +76,9 @@ alias dc="docker-compose"
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 export PATH="$PATH:$HOME/.rvm/bin"
 
+# direnv
+eval "$(direnv hook zsh)"
+
 # tabtab source for serverless package
 # uninstall by removing these lines or running `tabtab uninstall serverless`
 [[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/serverless.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/serverless.zsh
@@ -95,3 +99,8 @@ fi
 
 # aws-ask
 export AWS_SDK_LOAD_CONFIG=true AWS_CONFIG_FILE=~/.aws/config
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"

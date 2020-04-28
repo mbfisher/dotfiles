@@ -1,6 +1,7 @@
 [user]
     name = Mike Fisher
-    email = mike@mbfisher.com
+    email = mike.fisher@skyscanner.net
+	signingkey = FAD5367B1AAE64CD
 [core]
     excludesfile = ~/.gitignore
 [alias]
@@ -26,3 +27,5 @@
 [rerere]
 	enabled = true
 	autoupdate = true
+[commit]
+	gpgSign = true
