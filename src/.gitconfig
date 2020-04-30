@@ -9,6 +9,7 @@
 
     a = add --all .
     c = commit
+    cm = commit -m
     d = diff
     ds = diff --staged
     s = status
@@ -20,6 +21,7 @@
 	diff = diff --color
     add = add --all .
     squash = "! git-squash"
+    as = "! git a && git s"
 [push]
     default = current
 [pull]
@@ -27,5 +29,9 @@
 [rerere]
 	enabled = true
 	autoupdate = true
-[commit]
-	gpgSign = true
+#[commit]
+#   gpgSign = true
+
+
+[url "git@gitlab.com:"]
+        insteadOf = https://gitlab.com/

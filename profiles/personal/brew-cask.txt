@@ -1,0 +1,11 @@
+visual-studio-code
+iterm2
+spectacle
+docker
+slack
+plex-media-server
+transmission
+spotify
+vlc
+whatsapp
+nordvpn

@@ -58,6 +58,7 @@ SPACESHIP_PROMPT_ORDER=(
   git
   pyenv
   node
+  golang
   exec_time
   line_sep
   jobs
@@ -104,3 +105,6 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 export PATH="$HOME/.jenv/bin:$PATH"
 eval "$(jenv init -)"
+
+export GOPATH=$HOME/go
+export PATH="$PATH:$GOPATH/bin"
