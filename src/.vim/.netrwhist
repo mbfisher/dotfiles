@@ -1,5 +1,5 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =3
-let g:netrw_dirhist_1='/Users/mike.fisher/.config'
-let g:netrw_dirhist_2='/Users/mbfisher/dotfiles/profiles/personal'
-let g:netrw_dirhist_3='/Users/mbfisher/dotfiles/src/bin'
+let g:netrw_dirhistcnt =3
+let g:netrw_dirhist_3='/Users/mbfisher/.antigen'
+let g:netrw_dirhist_2='/Users/mbfisher/.zsh.d/plugins'
+let g:netrw_dirhist_1='/Users/mbfisher/.zsh.d'

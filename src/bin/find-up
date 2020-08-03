@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+CWD=$PWD
+while [[ $CWD != / ]] ; do
+  if [ -e $CWD/$@ ]; then
+    echo $CWD/$@
+    exit 0
+  fi
+  CWD=$(dirname $CWD)
+done
+
+exit 1

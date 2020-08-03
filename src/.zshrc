@@ -1,64 +1,55 @@
-export ANDROID_HOME=~/Library/Android/sdk
+log () {
+  [ "$MBF_DEBUG" != "" ] && echo "> $@"
+}
 
-# Set $PATH
-path+=/usr/local/heroku/bin
-path+=/usr/local/sbin
-path+=$HOME/bin
-path+=$HOME/.npm/bin
-path+=$HOME/.composer/vendor/bin
-path+=$HOME/.phpenv/bin
-path+=$HOME/anaconda3/bin
-path+=$HOME/.nvm
-path+=$ANDROID_HOME/tools/bin
-path+=$ANDROID_HOME/platform-tools
-path+=$HOME/Library/Python/3.7/bin
+# Set defaults
+ZSHD=$HOME/.zsh.d
+source $ZSHD/default.sh
 
-# Strip out $PATH dirs that don't exist
-path=($^path(N))
+# Load a profile
+MBF_PROFILE=$(cat ~/.zsh.profile)
+log "Using profile ${MBF_PROFILE}"
+source $ZSHD/profiles/${MBF_PROFILE}.sh
 
-# This needs to be separate. If you're not in a directory with node_modules when zsh
-# starts, the `^path` above will remove it.
-export PATH=./node_modules/.bin:$PATH
+MBF_PROMPT_TOOLS=()
+MBF_HOOKS=()
 
-# We add these separately to be sure they come first, to override macOS binaries
-export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/Cellar/findutils/4.6.0/libexec/gnubin:/usr/local/Cellar/gnu-tar/1.32/libexec/gnubin:$PATH
+# Apply each plugin in the profile
+for plugin in $MBF_PLUGINS; do
+  log "Applying plugin ${plugin}"
+  source $ZSHD/plugins/${plugin}.sh
+done
 
-# Remove duplicates from $PATH
-typeset -U path
-
-# pyenv
-if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-if which pyenv virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
-
-# nvm
-export NVM_AUTO_USE=true NVM_LAZY_LOAD=true
-
-# plugins
+# Set up antigen
 source ~/.antigen.zsh
-
+log "antigen use oh-my-zsh"
 antigen use oh-my-zsh
 
-antigen bundles <<EOBUNDLES
-  kubectl
-  zsh-users/zsh-syntax-highlighting
-  zsh-users/zsh-completions
-  lukechilds/zsh-nvm
-  gpg-agent
-EOBUNDLES
+# Set antigen bundles
+log "antigen bundles $MBF_BUNDLES"
+printf '%s\n' "${MBF_BUNDLES[@]}" | antigen bundles
 
-antigen theme denysdovhan/spaceship-prompt
+# Set theme
+# Check we haven't already sourced the theme before sourcing it again
+if ! antigen list | grep $MBF_THEME > /dev/null; then
+  log "antigen theme $MBF_THEME"
+  antigen theme $MBF_THEME
+fi
+
+# Apply antigen
+log "antigen apply"
 antigen apply
 
+# Set up spaceship prompt
 SPACESHIP_CHAR_SYMBOL="➜  "
 SPACESHIP_PROMPT_ADD_NEWLINE="false"
 SPACESHIP_GIT_STATUS_COLOR="yellow"
 
+log "Setting spaceship prompt: $MBF_PROMPT_TOOLS"
 SPACESHIP_PROMPT_ORDER=(
   dir
   git
-  pyenv
-  node
-  golang
+  $MBF_PROMPT_TOOLS
   exec_time
   line_sep
   jobs
@@ -67,6 +58,7 @@ SPACESHIP_PROMPT_ORDER=(
 )
 
 setopt no_share_history
+setopt extended_glob
 
 alias ls="ls --color"
 alias l="ls -Glah"
@@ -74,37 +66,16 @@ alias g="git"
 alias kb="kubectl"
 alias dc="docker-compose"
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
+# Show the PWD in iTerm tab title
+# https://gist.github.com/phette23/5270658
 
-# direnv
-eval "$(direnv hook zsh)"
+export DISABLE_AUTO_TITLE="true"
+function precmd () {
+  window_title="\033]0;${PWD##*/}\007"
+  echo -ne "$window_title"
+}
 
-# tabtab source for serverless package
-# uninstall by removing these lines or running `tabtab uninstall serverless`
-[[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/serverless.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/serverless.zsh
-# tabtab source for sls package
-# uninstall by removing these lines or running `tabtab uninstall sls`
-[[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/sls.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/sls.zsh
-# tabtab source for slss package
-# uninstall by removing these lines or running `tabtab uninstall slss`
-[[ -f /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/slss.zsh ]] && . /Users/mike.fisher/git-projects/pick-n-done-apis/node_modules/tabtab/.completions/slss.zsh
-
-#OktaAWSCLI
-if [[ -f "$HOME/.okta/bash_functions" ]]; then
-    . "$HOME/.okta/bash_functions"
-fi
-if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
-    PATH="$HOME/.okta/bin:$PATH"
-fi
-
-# aws-ask
-export AWS_SDK_LOAD_CONFIG=true AWS_CONFIG_FILE=~/.aws/config
-
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
-export PATH="$HOME/.jenv/bin:$PATH"
-eval "$(jenv init -)"
-
-export GOPATH=$HOME/go
-export PATH="$PATH:$GOPATH/bin"
+for hook in $MBF_HOOKS; do
+  echo "Running hook ${hook}"
+  $hook
+done

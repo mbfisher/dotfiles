@@ -2,7 +2,7 @@ import csv
 import sys
 from datetime import datetime
 
-fields = ['Date completed', 'Description', 'Amount', 'Balance']
+fields = ['Date completed (UTC)', 'Description', 'Amount', 'Balance']
 
 data = []
 
@@ -17,7 +17,7 @@ writer = csv.writer(sys.stdout)
 writer.writerow(fields)
 
 for i, row in enumerate(data):
-    row['Date completed'] = datetime.strptime(row['Date completed'], '%Y-%m-%d').strftime('%d/%m/%Y')
+    row['Date completed (UTC)'] = datetime.strptime(row['Date completed (UTC)'], '%Y-%m-%d').strftime('%d/%m/%Y')
     if row['Fee']:
         row['Amount'] = round(float(row['Amount']) + float(row['Fee']), 2)
     writer.writerow([row[field] for field in fields])

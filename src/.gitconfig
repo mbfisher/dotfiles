@@ -3,17 +3,18 @@
     email = mike.fisher@skyscanner.net
 	signingkey = FAD5367B1AAE64CD
 [core]
-    excludesfile = ~/.gitignore
+	excludesfile = /Users/mbfisher/.gitignore
 [alias]
     lg = log --graph --pretty=format:'%C(dim)%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --no-merges
 
     a = add --all .
     c = commit
     cm = commit -m
+    ca = commit --amend
     d = diff
     ds = diff --staged
     s = status
-    ps = push
+    ps = push -u
     pf = push -f
     pt = push --tags
     pl = pull
@@ -21,9 +22,9 @@
 	diff = diff --color
     add = add --all .
     squash = "! git-squash"
-    as = "! git a && git s"
+    as = "! git add -u . && git s"
 [push]
-    default = current
+	default = current
 [pull]
     default = current
 [rerere]
@@ -34,4 +35,4 @@
 
 
 [url "git@gitlab.com:"]
-        insteadOf = https://gitlab.com/
+	insteadOf = https://gitlab.com/

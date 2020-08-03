@@ -1,0 +1,18 @@
+# Strip out $PATH dirs that don't exist
+path=($^path(N))
+
+# Remove duplicates from $PATH
+typeset -U path
+
+#OktaAWSCLI
+if [[ -f "$HOME/.okta/bash_functions" ]]; then
+    . "$HOME/.okta/bash_functions"
+fi
+if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
+    PATH="$HOME/.okta/bin:$PATH"
+fi
+
+# aws-ask
+export AWS_SDK_LOAD_CONFIG=true AWS_CONFIG_FILE=~/.aws/config
+
+

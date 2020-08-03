@@ -17,7 +17,7 @@ fi
 
 echo -e "⏱  Installing Homebrew packages"
 
-brew install findutils coreutils gnu-tar htop tree
+brew install findutils coreutils gnu-tar htop tree direnv
 
 if ! ls -l ~/Library/Fonts | grep -i powerline > /dev/null; then
     echo "⏱  Installing Powerline Fonts"
