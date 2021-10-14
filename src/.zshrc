@@ -7,9 +7,13 @@ ZSHD=$HOME/.zsh.d
 source $ZSHD/default.sh
 
 # Load a profile
-MBF_PROFILE=$(cat ~/.zsh.profile)
-log "Using profile ${MBF_PROFILE}"
-source $ZSHD/profiles/${MBF_PROFILE}.sh
+if [ -f ~/.zsh.profile ]; then
+  MBF_PROFILE=$(cat ~/.zsh.profile)
+  log "Using profile ${MBF_PROFILE}"
+  source $ZSHD/profiles/${MBF_PROFILE}.sh
+else
+  log "No ~/.zsh.profile, skipping"
+fi
 
 MBF_PROMPT_TOOLS=()
 MBF_HOOKS=()
@@ -79,3 +83,8 @@ for hook in $MBF_HOOKS; do
   echo "Running hook ${hook}"
   $hook
 done
+
+# change to a directory without typing cd
+setopt auto_cd
+# add all git org directories to cdpath e.g. git-projects/github.com/mbfisher/foo, can do cd foo
+cdpath=("${(@f)$(find $HOME/git-projects -type d -mindepth 2 -maxdepth 2)}")

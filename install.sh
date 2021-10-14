@@ -10,14 +10,28 @@ if [ ! -d /Library/Developer/CommandLineTools ]; then
     sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
 fi
 
-if ! which brew > /dev/null; then
-    echo "⏱  Installing homebrew"
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-fi
-
 echo -e "⏱  Installing Homebrew packages"
 
-brew install findutils coreutils gnu-tar htop tree direnv
+brew install coreutils
+brew install \
+	alfred \
+	awscli \
+	direnv \
+	findutils \
+	gnu-tar \
+	insomnia \
+	iterm2 \
+	htop \
+	jetbrains-toolbox \
+	pstree \
+	rectangle \
+	spotify \
+	tree \
+	visual-studio-code \
+	whatsapp
+
+brew install --cask \
+	docker
 
 if ! ls -l ~/Library/Fonts | grep -i powerline > /dev/null; then
     echo "⏱  Installing Powerline Fonts"
