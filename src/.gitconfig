@@ -11,6 +11,7 @@
     c = commit
     cm = commit -m
     ca = commit --amend
+    cb = checkout -b
     d = diff
     ds = diff --staged
     s = status
@@ -23,6 +24,7 @@
     add = add --all .
     squash = "! git-squash"
     as = "! git add -u . && git s"
+
 [push]
 	default = current
 [pull]
