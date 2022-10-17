@@ -7,7 +7,6 @@ MBF_THEME=denysdovhan/spaceship-prompt
 
 MBF_PLUGINS=(
   direnv
-  node
 )
 
 path+=(

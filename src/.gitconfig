@@ -1,7 +1,6 @@
 [user]
     name = Mike Fisher
-    email = mike.fisher@skyscanner.net
-	signingkey = FAD5367B1AAE64CD
+    email = mike@mbfisher.com
 [core]
 	excludesfile = /Users/mbfisher/.gitignore
 [alias]
@@ -32,9 +31,7 @@
 [rerere]
 	enabled = true
 	autoupdate = true
-#[commit]
-#   gpgSign = true
 
-
+# Something to do with cloning Go Modules at Mercarto
 [url "git@gitlab.com:"]
 	insteadOf = https://gitlab.com/

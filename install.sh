@@ -12,7 +12,7 @@ fi
 
 echo -e "⏱  Installing Homebrew packages"
 
-brew install coreutils
+brew install coreutils gnupg
 brew install \
 	alfred \
 	awscli \

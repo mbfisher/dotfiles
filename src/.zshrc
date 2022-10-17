@@ -18,6 +18,8 @@ fi
 MBF_PROMPT_TOOLS=()
 MBF_HOOKS=()
 
+typeset -U $MBF_PLUGINS
+
 # Apply each plugin in the profile
 for plugin in $MBF_PLUGINS; do
   log "Applying plugin ${plugin}"
