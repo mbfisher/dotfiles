@@ -1,6 +1,10 @@
-log () {
+# MBF_DEBUG=1
+debug () {
   [ "$MBF_DEBUG" != "" ] && echo "> $@"
 }
+
+MBF_PROMPT_TOOLS=()
+MBF_HOOKS=()
 
 # Set defaults
 ZSHD=$HOME/.zsh.d
@@ -9,41 +13,36 @@ source $ZSHD/default.sh
 # Load a profile
 if [ -f ~/.zsh.profile ]; then
   MBF_PROFILE=$(cat ~/.zsh.profile)
-  log "Using profile ${MBF_PROFILE}"
+  debug "Using profile ${MBF_PROFILE}"
   source $ZSHD/profiles/${MBF_PROFILE}.sh
 else
-  log "No ~/.zsh.profile, skipping"
+  debug "No ~/.zsh.profile, skipping"
 fi
-
-MBF_PROMPT_TOOLS=()
-MBF_HOOKS=()
 
 typeset -U $MBF_PLUGINS
 
 # Apply each plugin in the profile
 for plugin in $MBF_PLUGINS; do
-  log "Applying plugin ${plugin}"
+  debug "Applying plugin ${plugin}"
   source $ZSHD/plugins/${plugin}.sh
 done
 
 # Set up antigen
 source ~/.antigen.zsh
-log "antigen use oh-my-zsh"
-antigen use oh-my-zsh
 
 # Set antigen bundles
-log "antigen bundles $MBF_BUNDLES"
+debug "antigen bundles $MBF_BUNDLES"
 printf '%s\n' "${MBF_BUNDLES[@]}" | antigen bundles
 
 # Set theme
 # Check we haven't already sourced the theme before sourcing it again
 if ! antigen list | grep $MBF_THEME > /dev/null; then
-  log "antigen theme $MBF_THEME"
+  debug "antigen theme $MBF_THEME"
   antigen theme $MBF_THEME
 fi
 
 # Apply antigen
-log "antigen apply"
+debug "antigen apply"
 antigen apply
 
 # Set up spaceship prompt
@@ -51,7 +50,7 @@ SPACESHIP_CHAR_SYMBOL="➜  "
 SPACESHIP_PROMPT_ADD_NEWLINE="false"
 SPACESHIP_GIT_STATUS_COLOR="yellow"
 
-log "Setting spaceship prompt: $MBF_PROMPT_TOOLS"
+debug "Setting spaceship prompt: $MBF_PROMPT_TOOLS"
 SPACESHIP_PROMPT_ORDER=(
   dir
   git
@@ -82,7 +81,7 @@ function precmd () {
 }
 
 for hook in $MBF_HOOKS; do
-  echo "Running hook ${hook}"
+  debug "Running hook ${hook}"
   $hook
 done
 
@@ -90,3 +89,9 @@ done
 setopt auto_cd
 # add all git org directories to cdpath e.g. git-projects/github.com/mbfisher/foo, can do cd foo
 cdpath=("${(@f)$(find $HOME/git-projects -type d -mindepth 2 -maxdepth 2)}")
+
+# Created by `pipx` on 2024-01-22 14:42:52
+export PATH="$PATH:/Users/mfisher/.local/bin"
+
+# Added by Windsurf
+export PATH="/Users/mfisher/.codeium/windsurf/bin:$PATH"

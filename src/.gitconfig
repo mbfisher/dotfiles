@@ -1,6 +1,6 @@
 [user]
     name = Mike Fisher
-    email = mike@mbfisher.com
+    email = mfisher@gocardless.com
 [core]
 	excludesfile = /Users/mbfisher/.gitignore
 [alias]
@@ -8,21 +8,23 @@
 
     a = add --all .
     c = commit
+    cr = "! git stash && git fetch && git rebase origin/master && git stash pop && git commit $@"
     cm = commit -m
-    ca = commit --amend
+    ca = c --amend
     cb = checkout -b
     d = diff
     ds = diff --staged
     s = status
     ps = push -u
-    pf = push -f
+    pf = push --force-with-lease
     pt = push --tags
     pl = pull
-    pr = pull --rebase
+    pr = pull --rebase --autostash
 	diff = diff --color
     add = add --all .
     squash = "! git-squash"
     as = "! git add -u . && git s"
+    master = "! git checkout master && git pull --rebase"
 
 [push]
 	default = current

@@ -11,6 +11,8 @@ MBF_PLUGINS=(
 
 path+=(
   $HOME/bin
+  $HOME/Library/Application Support/JetBrains/Toolbox/scripts
+  $HOME/.rd/bin
 )
 
 # We add these separately to be sure they come first, to override macOS binaries

@@ -1,0 +1,17 @@
+#! /bin/bash
+
+set -exu
+
+uri=$1
+dir=${uri#git@}
+dir=${dir#https://}
+dir=${dir/:/\/}
+dir=${dir%.git}
+target="$HOME/git-projects/$dir"
+
+echo $target
+
+mkdir -p $target
+git clone $uri $target
+
+cd $target

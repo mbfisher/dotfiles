@@ -14,12 +14,10 @@ echo -e "⏱  Installing Homebrew packages"
 
 brew install coreutils gnupg
 brew install \
-	alfred \
 	awscli \
 	direnv \
 	findutils \
 	gnu-tar \
-	insomnia \
 	iterm2 \
 	htop \
 	jetbrains-toolbox \
