@@ -1,9 +1,8 @@
 MBF_BUNDLES=(
   zsh-users/zsh-syntax-highlighting
   zsh-users/zsh-completions
+  kiurchv/asdf.plugin.zsh
 )
-
-MBF_THEME=denysdovhan/spaceship-prompt
 
 MBF_PLUGINS=(
   direnv
