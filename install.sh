@@ -1,51 +1,50 @@
 #!/bin/bash
 
-set -e
+echo "> Installing from Brewfile..."
+brew bundle
 
-git submodule update
+for CONFIG in $(find src/.config -maxdepth 1 -mindepth 1 | sed 's|^src/.config/||'); do
+    TARGET="$HOME/.config/$CONFIG"
+    SOURCE="$PWD/src/.config/$CONFIG"
 
-if [ ! -d /Library/Developer/CommandLineTools ]; then
-    echo "⏱  Installing command line tools"
-    xcode-select --install
-    sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
-fi
+    if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SOURCE" ]; then
+        continue
+    fi
 
-echo -e "⏱  Installing Homebrew packages"
+    CONFIRM="Y"
+    if [ -e "$TARGET" ]; then
+        echo -n "$TARGET exists: overwrite [Y/n]: "
+        read CONFIRM
+    fi
 
-brew install coreutils gnupg
-brew install \
-	alfred \
-	awscli \
-	direnv \
-	findutils \
-	gnu-tar \
-	insomnia \
-	iterm2 \
-	htop \
-	jetbrains-toolbox \
-	pstree \
-	rectangle \
-	spotify \
-	tree \
-	visual-studio-code \
-	whatsapp
+    if [ "$CONFIRM" = "Y" ] || [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "" ]; then
+        echo "Installing .config/$CONFIG"
+        rm -rf "$TARGET"
+        ln -sf $PWD/src/.config/$CONFIG ~/.config/$CONFIG
+    fi
+done
 
-brew install --cask \
-	docker
+for FILE in $(find src -maxdepth 1 -mindepth 1 | sed 's|^src/||'); do
+    if [ "$FILE" = ".config" ]; then
+        continue
+    fi
 
-if ! ls -l ~/Library/Fonts | grep -i powerline > /dev/null; then
-    echo "⏱  Installing Powerline Fonts"
-    [ ! -d /tmp/powerline-fonts ] && git clone https://github.com/powerline/fonts.git --depth=1 /tmp/powerline-fonts
-    /tmp/powerline-fonts/install.sh
-fi
+    TARGET="$HOME/$FILE"
+    SOURCE="$PWD/src/$FILE"
 
-echo "⏱  Installing zsh"
-chsh -s /bin/zsh
-curl -LSs git.io/antigen > ~/.antigen.zsh
+    if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SOURCE" ]; then
+        continue
+    fi
 
-echo "⏱  Configuring iTerm"
-defaults write com.googlecode.iterm2.plist PrefsCustomFolder -string "$PWD/iterm2"
-defaults write com.googlecode.iterm2.plist LoadPrefsFromCustomFolder -bool true
+    CONFIRM="Y"
+    if [ -e "$TARGET" ]; then
+        echo -n "$TARGET exists: overwrite [Y/n]: "
+        read CONFIRM
+    fi
 
-echo "⏱  Installing dotfiles"
-./scripts/dotfiles.sh
+    if [ "$CONFIRM" = "Y" ] || [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "" ]; then
+        echo "Installing $FILE"
+        rm -rf "$TARGET"
+        ln -sf $PWD/src/$FILE ~/$FILE
+    fi
+done

@@ -1,0 +1,14 @@
+layout {
+    pane stacked=true {
+        pane command="ngrok" {
+            args "http" "3000" "--domain=incident-io-mike-fisher.eu.ngrok.io" "--host-header=rewrite"
+        }
+        pane command="mise" {
+            args "exec" "--" "make" "run"
+            cwd "server"
+        }
+        pane command="mise" {
+            args "exec" "--" "make" "run_dashboard"
+        }
+    }
+}

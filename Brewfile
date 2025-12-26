@@ -1,0 +1,21 @@
+brew "coreutils"
+brew "gh"
+brew "jq"
+brew "ncdu" # show disk usage in a directory - good for cleaning up large caches
+brew "neovim"
+brew "ripgrep"
+cask "ghostty"
+cask "notion"
+cask "raycast"
+cask "karabiner-elements" 
+cask "spotify"
+cask "visual-studio-code"
+cask "whatsapp"
+
+# incident.io
+brew "postgresql@17"
+cask "claude"
+cask "google-cloud-sdk"
+cask "linear-linear"
+cask "ngrok"
+

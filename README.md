@@ -5,3 +5,9 @@
 3. `git clone git@github.com:mbfisher/dotfiles`
 4. Run `install.sh`
 5. Open iTerm
+
+Peripherals
+
+Keychron Link = keyboard = no logo on dongle
+Keychron Link-KM = mouse = logo on dongle
+

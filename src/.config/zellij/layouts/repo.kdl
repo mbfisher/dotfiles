@@ -1,0 +1,13 @@
+layout {
+    pane stacked=true {
+        pane
+        pane command="nvim"
+        pane command="mise" {
+            args "exec" "--" "claude"
+        }
+    }
+
+    pane size=1 borderless=true {
+        plugin location="zellij:status-bar"
+    }
+}

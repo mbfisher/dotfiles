@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.lazyvim.org)",
+      "WebSearch",
+      "Bash(ghostty +show-config:*)",
+      "Bash(ghostty +list-themes:*)",
+      "Bash(cat:*)",
+      "Bash(defaults read:*)",
+      "Bash(defaults find modifiermapping:*)",
+      "Bash(ioreg -p IOUSB:*)",
+      "Bash(hidutil list:*)",
+      "Bash(hidutil property:*)",
+      "Bash(defaults find:*)",
+      "Bash(defaults find HIDKeyboardModifierMapping)",
+      "WebFetch(domain:github.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

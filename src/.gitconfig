@@ -23,6 +23,8 @@
     add = add --all .
     squash = "! git-squash"
     as = "! git add -u . && git s"
+    nb = "! f() { ~/bin/git-new-branch.sh \"$1\"; }; f"
+    up = "! git fetch && git pull --rebase"
 
 [push]
 	default = current

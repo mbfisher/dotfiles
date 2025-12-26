@@ -1,61 +1,17 @@
-log () {
-  [ "$MBF_DEBUG" != "" ] && echo "> $@"
-}
-
-# Set defaults
-ZSHD=$HOME/.zsh.d
-source $ZSHD/default.sh
-
-# Load a profile
-if [ -f ~/.zsh.profile ]; then
-  MBF_PROFILE=$(cat ~/.zsh.profile)
-  log "Using profile ${MBF_PROFILE}"
-  source $ZSHD/profiles/${MBF_PROFILE}.sh
-else
-  log "No ~/.zsh.profile, skipping"
-fi
-
-MBF_PROMPT_TOOLS=()
-MBF_HOOKS=()
-
-typeset -U $MBF_PLUGINS
-
-# Apply each plugin in the profile
-for plugin in $MBF_PLUGINS; do
-  log "Applying plugin ${plugin}"
-  source $ZSHD/plugins/${plugin}.sh
-done
-
-# Set up antigen
-source ~/.antigen.zsh
-log "antigen use oh-my-zsh"
-antigen use oh-my-zsh
-
-# Set antigen bundles
-log "antigen bundles $MBF_BUNDLES"
-printf '%s\n' "${MBF_BUNDLES[@]}" | antigen bundles
-
-# Set theme
-# Check we haven't already sourced the theme before sourcing it again
-if ! antigen list | grep $MBF_THEME > /dev/null; then
-  log "antigen theme $MBF_THEME"
-  antigen theme $MBF_THEME
-fi
-
-# Apply antigen
-log "antigen apply"
-antigen apply
+homebrew_prefix=$(brew --prefix)
 
 # Set up spaceship prompt
 SPACESHIP_CHAR_SYMBOL="➜  "
 SPACESHIP_PROMPT_ADD_NEWLINE="false"
 SPACESHIP_GIT_STATUS_COLOR="yellow"
 
-log "Setting spaceship prompt: $MBF_PROMPT_TOOLS"
 SPACESHIP_PROMPT_ORDER=(
   dir
   git
-  $MBF_PROMPT_TOOLS
+
+  golang
+  node
+
   exec_time
   line_sep
   jobs
@@ -71,22 +27,36 @@ alias l="ls -Glah"
 alias g="git"
 alias kb="kubectl"
 alias dc="docker-compose"
+alias goland="nohup /opt/homebrew/bin/goland . &> /dev/null &"
 
-# Show the PWD in iTerm tab title
-# https://gist.github.com/phette23/5270658
+# Enable tab completion
+autoload -Uz compinit && compinit
 
-export DISABLE_AUTO_TITLE="true"
-function precmd () {
-  window_title="\033]0;${PWD##*/}\007"
-  echo -ne "$window_title"
-}
+# Install scripts
+. $HOME/.zsh.d/z.sh
 
-for hook in $MBF_HOOKS; do
-  echo "Running hook ${hook}"
-  $hook
-done
+# Enable spaceship
+source ${homebrew_prefix}/opt/spaceship/spaceship.zsh
+# Enable mise
+eval "$(mise activate zsh)"
 
-# change to a directory without typing cd
-setopt auto_cd
-# add all git org directories to cdpath e.g. git-projects/github.com/mbfisher/foo, can do cd foo
-cdpath=("${(@f)$(find $HOME/git-projects -type d -mindepth 2 -maxdepth 2)}")
+# Navigate between "words" with option+(left|right)
+# Requires alt+left and alt+right to be unbound in Ghostty config
+# Define what a "word" means
+# See https://zsh.sourceforge.io/Doc/Release/User-Contributions.html#index-match_002dwords_002dby_002dstyle
+autoload -U select-word-style
+select-word-style shell
+# Bind built-in word movement to Option+arrow keys
+# Option+Left Arrow
+bindkey '^[[1;3D' backward-word
+# Option+Right Arrow
+bindkey '^[[1;3C' forward-word
+
+
+if [ -d "${homebrew_prefix}/share/google-cloud-sdk" ]; then
+  source "${homebrew_prefix}/share/google-cloud-sdk/path.zsh.inc"
+  source "${homebrew_prefix}/share/google-cloud-sdk/completion.zsh.inc"
+fi
+
+export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
+export PATH="$HOME/bin":$PATH

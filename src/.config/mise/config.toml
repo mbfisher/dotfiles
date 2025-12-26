@@ -1,0 +1,8 @@
+[settings]
+idiomatic_version_file_enable_tools = []
+experimental = true
+
+[tools]
+"npm:@anthropic-ai/claude-code" = "latest"
+"npm:eas-cli" = "latest"
+node = "22"
