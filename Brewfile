@@ -11,11 +11,3 @@ cask "karabiner-elements"
 cask "spotify"
 cask "visual-studio-code"
 cask "whatsapp"
-
-# incident.io
-brew "postgresql@17"
-cask "claude"
-cask "google-cloud-sdk"
-cask "linear-linear"
-cask "ngrok"
-

@@ -1,0 +1,5 @@
+brew "postgresql@17"
+cask "claude"
+cask "google-cloud-sdk"
+cask "linear-linear"
+cask "ngrok"
