@@ -6,3 +6,4 @@ experimental = true
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:eas-cli" = "latest"
 node = "22"
+go = "latest"
