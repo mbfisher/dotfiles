@@ -37,6 +37,10 @@ vim.pack.add({
     -- lsp
     "https://github.com/neovim/nvim-lspconfig",
     "https://github.com/mason-org/mason-lspconfig.nvim",
+    -- completion engine
+    "https://github.com/saghen/blink.cmp",
+    -- nvim config dev support
+    "https://github.com/folke/lazydev.nvim",
 })
 
 ---------------------------------------------------------------------------------------------------
@@ -78,7 +82,7 @@ else
             setup_treesitter()
         end)
     end)
-    
+
     print("tree-sitter-cli is missing. Installing now...")
     ts_cli:install()
 end
@@ -125,6 +129,78 @@ wk.add({
           },
 })
 
+-- lazydev
+require("lazydev").setup({
+  library = {
+    -- Load luvit types when the `vim.uv` word is found
+    { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+  },
+})
+
+-- blink.cmp
+require("blink.cmp").setup({
+  fuzzy = {
+    -- 1. Use the prebuilt binary if possible
+    prebuilt_binaries = {
+      download = true,
+      -- This glob ensures it tries to find the latest stable prebuilt
+      force_version = "v*",
+    },
+    -- 2. If it still fails, fall back to Lua silently 
+    -- (keeps the editor usable while you troubleshoot)
+    implementation = "prefer_rust",
+  },
+
+  -- 'default' preset: <C-space> to open, up/down arrows to choose, continue typing to select, <C-e> to cancel
+  keymap = { preset = 'default' },
+
+  appearance = {
+    -- Sets the fallback highlight groups to nvim-cmp's groups 
+    -- Useful if your colorscheme hasn't updated for blink yet
+    use_nvim_cmp_as_default = true,
+    -- 'mono' variant helps icons align better in some terminal fonts
+    nerd_font_variant = 'mono'
+  },
+
+  -- THE "OPT-IN" CONTROL CENTER
+  completion = {
+    -- Controls the popup list
+    menu = {
+      -- Don't show automatically while typing
+      auto_show = false
+    },
+
+    -- Shows a small preview window next to the completion item
+    documentation = {
+        auto_show = true,
+        auto_show_delay_ms = 200 -- Slight delay so it doesn't flicker while scrolling
+    },
+
+    -- Ghost text shows the "predicted" completion in gray after your cursor
+    -- You mentioned wanting 'opt-in', so keeping this off prevents extra visual noise
+    ghost_text = { enabled = false },
+  },
+
+  -- SIGNATURE HELP
+  -- This automatically opens function parameter hints (like "name: string") as you type
+  signature = { enabled = true },
+
+  -- SOURCE MANAGEMENT
+  sources = {
+    -- 'default' defines the order and priority of where results come from
+    -- We put 'lazydev' first so nvim-api results always beat out random buffer text
+    default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+
+    providers = {
+      -- This connects folke/lazydev.nvim directly to the blink engine
+      lazydev = {
+        name = "LazyDev",
+        module = "lazydev.integrations.blink",
+        score_offset = 100, -- Boosts priority so LazyDev items appear at the top
+      },
+    },
+  },
+})
 
 ---------------------------------------------------------------------------------------------------
 -- 5. Keymaps
@@ -134,6 +210,8 @@ vim.keymap.set("n", "<S-l>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 
 vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" })
 
+-- Show diagnostic under cursor in a floating window
+vim.keymap.set('n', '<leader>cd', vim.diagnostic.open_float, { desc = "Line Diagnostics" })
 vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename" })
 
 -- Clear existing gr maps; see https://neovim.io/doc/user/lsp/#gra
