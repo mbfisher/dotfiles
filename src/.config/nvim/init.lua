@@ -136,6 +136,41 @@ vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Delete Buffer" }
 
 vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { desc = "Rename" })
 
+-- Clear existing gr maps; see https://neovim.io/doc/user/lsp/#gra
+for _, map in ipairs(vim.api.nvim_get_keymap("n")) do
+    if map.lhs:sub(1, 2) == "gr" then
+        vim.keymap.del("n", map.lhs)
+    end
+end
+-- Set LSP keymaps on a buffer when a client attaches
+vim.api.nvim_create_autocmd("LspAttach", {
+    callback = function(args)
+        local function map(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { buffer = args.buf, desc = desc })
+        end
+
+        -- Navigation using Telescope with 'reuse_win'
+        -- reuse_win will check if a buffer is already open and move the cursor in it
+        map("n", "gd", function() 
+            require("telescope.builtin").lsp_definitions({ reuse_win = true }) 
+        end, "Goto Definition")
+
+        map("n", "gr", "<cmd>Telescope lsp_references<cr>", "References")
+
+        map("n", "gI", function() 
+            require("telescope.builtin").lsp_implementations({ reuse_win = true }) 
+        end, "Goto Implementation")
+
+        map("n", "gy", function() 
+            require("telescope.builtin").lsp_type_definitions({ reuse_win = true }) 
+        end, "Goto T[y]pe Definition")
+
+        -- Actions
+        map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, "Code Action")
+        map("n", "<leader>cr", vim.lsp.buf.rename, "Rename")
+    end,
+})
+
 vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
 
 vim.keymap.set("n", "<leader>sg", "<cmd>Telescope live_grep<cr>", { desc = "Live grep" })
