@@ -96,7 +96,15 @@ package.loaded["incidentio"] = nil
 - **Verify via find_all():** filter items where `event_name == "MicrosoftTeamsAppInstalledTeam"`
   and assert none have a file path containing `/matchers/`
 
-### 11. Filter cycle
+### 11. No duplicate subscribers from multiline rg matches
+
+- **Navigate to:** `server/app/oncall/alert/enqueue_handle_event.go:168` — cursor on `AlertHandleEvent`
+- **Trigger:** `gE`
+- **Expected:** Exactly 1 `[S]` item at line 266 (`subscribe(handleEventFromAsync,`)
+- **Must NOT include:** lines 267 (`SubscribeParams{`) or 268 (`SubscriberID:`) — these are
+  continuation lines from the same multiline rg match, not separate subscribe calls
+
+### 12. Filter cycle
 
 - **Open picker** for any event with `gE`
 - **Invoke** `toggle_event_filter` action 3 times (or `<C-i>` in a real terminal)

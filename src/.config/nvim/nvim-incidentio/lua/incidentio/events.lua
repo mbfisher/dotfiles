@@ -177,7 +177,8 @@ function M.parse_inline_subscribers(output)
   local seen_file_events = {}
   for line in output:gmatch("[^\n]+") do
     local file, lnum, text = line:match("^([^:]+):(%d+):(.*)")
-    if file and text:match("[Ss]ubscribe") then
+    -- Match subscribe function calls only — not SubscribeParams, SubscriberID, etc.
+    if file and text:match("[Ss]ubscribe%w*%(") then
       local key = file .. ":" .. lnum
       if not seen_lines[key] then
         seen_lines[key] = true
@@ -243,7 +244,8 @@ function M.find(event_name)
   local seen = {}
   for line in inline_output:gmatch("[^\n]+") do
     local file, lnum, text = line:match("^([^:]+):(%d+):(.*)")
-    if file and text:match("[Ss]ubscribe") then
+    -- Match subscribe function calls only — not SubscribeParams, SubscriberID, etc.
+    if file and text:match("[Ss]ubscribe%w*%(") then
       local key = file .. ":" .. lnum
       if not seen[key] then
         seen[key] = true
