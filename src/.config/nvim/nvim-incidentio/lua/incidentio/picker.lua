@@ -1,15 +1,14 @@
 -- Picker dispatch: resolves the configured backend and delegates to the adapter.
 --
 -- Public API (these are the functions users bind to keymaps):
---   picker.api_pick()               — open API browser picker
---   picker.events_pick(event_name)  — open event picker for a specific event
---   picker.events_pick_all()        — open browse-all-events picker
---   picker.events_pick_at_cursor()  — open event picker for event under cursor (convenience)
+--   picker.api_pick()              — open API browser picker
+--   picker.events_pick()           — open event picker (browse all events)
+--   picker.events_pick_at_cursor() — same picker, pre-filtered to event under cursor
 --
 -- Adapter interface — each adapter module in pickers/ must export:
 --   adapter.api_pick()
---   adapter.events_pick(event_name)
---   adapter.events_pick_all()
+--   adapter.events_pick(pick_opts?) — pick_opts.pattern (snacks) or .default_text (telescope)
+--   adapter.events_pick_all()       — calls events_pick() with no opts
 
 local M = {}
 
@@ -55,9 +54,9 @@ function M.api_pick()
   if adapter then adapter.api_pick() end
 end
 
-function M.events_pick(event_name)
+function M.events_pick()
   local adapter = get_adapter()
-  if adapter then adapter.events_pick(event_name) end
+  if adapter then adapter.events_pick() end
 end
 
 function M.events_pick_all()
@@ -65,16 +64,17 @@ function M.events_pick_all()
   if adapter then adapter.events_pick_all() end
 end
 
---- Convenience: open the event picker for the event under the cursor.
---- Extracts the event name and delegates to events_pick(). Notifies if no
---- event name is found. Use this in keymaps to avoid boilerplate.
+--- Convenience: open the event picker with the event under the cursor pre-filled.
+--- Extracts the event name and opens the same async picker as events_pick(),
+--- but with the search pre-populated. Notifies if no event name is found.
 function M.events_pick_at_cursor()
   local name = require("incidentio.events").event_name_under_cursor()
   if not name or name == "" then
     vim.notify("No event name under cursor", vim.log.levels.WARN)
     return
   end
-  M.events_pick(name)
+  local adapter = get_adapter()
+  if adapter then adapter.events_pick({ pattern = name }) end
 end
 
 return M

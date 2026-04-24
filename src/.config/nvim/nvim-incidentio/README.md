@@ -15,7 +15,7 @@ Requires one of: [snacks.nvim](https://github.com/folke/snacks.nvim) (recommende
   dependencies = { "folke/snacks.nvim" },
   keys = {
     { "<leader>sA", function() require("incidentio.picker").api_pick() end, desc = "APIs" },
-    { "<leader>sE", function() require("incidentio.picker").events_pick_all() end, desc = "Events" },
+    { "<leader>sE", function() require("incidentio.picker").events_pick() end, desc = "Events" },
     { "gA", function() require("incidentio.api").goto_counterpart() end, desc = "Goto API design/impl" },
     { "gE", function() require("incidentio.picker").events_pick_at_cursor() end, desc = "Event publishers/subscribers" },
   },
@@ -31,7 +31,7 @@ Add the plugin to your runtimepath, then call setup and configure keymaps:
 require("incidentio").setup()
 
 vim.keymap.set("n", "<leader>sA", function() require("incidentio.picker").api_pick() end, { desc = "APIs" })
-vim.keymap.set("n", "<leader>sE", function() require("incidentio.picker").events_pick_all() end, { desc = "Events" })
+vim.keymap.set("n", "<leader>sE", function() require("incidentio.picker").events_pick() end, { desc = "Events" })
 vim.keymap.set("n", "gA", function() require("incidentio.api").goto_counterpart() end, { desc = "Goto API design/impl" })
 vim.keymap.set("n", "gE", function() require("incidentio.picker").events_pick_at_cursor() end, { desc = "Event publishers/subscribers" })
 ```

@@ -88,14 +88,17 @@ function M.api_pick()
     :find()
 end
 
---- Open the event picker pre-scoped to a specific event name.
-function M.events_pick(event_name)
-  local items = events.find(event_name)
+--- Open the event picker. Pass pick_opts.default_text to pre-fill the search
+--- (used by events_pick_at_cursor via picker.lua).
+function M.events_pick(pick_opts)
+  pick_opts = pick_opts or {}
+  local items = events.find_all()
   local entry_maker = make_entry_maker(events.badges, "event_name")
 
   pickers
     .new({}, {
-      prompt_title = event_name .. " (C-i: toggle filter)",
+      prompt_title = "Events (C-i: toggle filter)",
+      default_text = pick_opts.default_text or "",
       finder = finders.new_table({ results = items, entry_maker = entry_maker }),
       sorter = conf.generic_sorter({}),
       previewer = conf.file_previewer({}),
@@ -104,20 +107,8 @@ function M.events_pick(event_name)
     :find()
 end
 
---- Open the event picker for browsing all events.
 function M.events_pick_all()
-  local items = events.find_all()
-  local entry_maker = make_entry_maker(events.badges, "event_name")
-
-  pickers
-    .new({}, {
-      prompt_title = "Events (C-i: toggle filter)",
-      finder = finders.new_table({ results = items, entry_maker = entry_maker }),
-      sorter = conf.generic_sorter({}),
-      previewer = conf.file_previewer({}),
-      attach_mappings = attach_filter_mappings(events, items, entry_maker),
-    })
-    :find()
+  M.events_pick()
 end
 
 return M

@@ -106,26 +106,11 @@ function M.api_pick()
   }))
 end
 
---- Open the event picker pre-scoped to a specific event name.
-function M.events_pick(event_name)
-  local cfg = filter_config(events, "_event_filter", function(label)
-    return event_name .. " [" .. label .. "] (C-i: toggle filter)"
-  end)
-
-  Snacks.picker.pick(vim.tbl_deep_extend("force", cfg, {
-    title = event_name .. " (C-i: toggle filter)",
-    format = format_event,
-    finder = function()
-      return events.find(event_name)
-    end,
-  }))
-end
-
---- Open the event picker for browsing all events.
---- Uses snacks async to run all 4 rg searches in parallel, pushing results
---- as each completes — definitions and publishers appear first while the
---- slower subscriber searches are still running.
-function M.events_pick_all()
+--- Open the event picker. Uses snacks async to run all 4 rg searches in parallel,
+--- pushing results as each completes. Pass pick_opts.pattern to pre-fill the search
+--- (used by events_pick_at_cursor via picker.lua).
+function M.events_pick(pick_opts)
+  pick_opts = pick_opts or {}
   local cfg = filter_config(events, "_event_filter", function(label)
     return "Events [" .. label .. "] (C-i: toggle filter)"
   end)
@@ -190,11 +175,15 @@ function M.events_pick_all()
     end
   end
 
-  Snacks.picker.pick(vim.tbl_deep_extend("force", cfg, {
+  Snacks.picker.pick(vim.tbl_deep_extend("force", cfg, pick_opts, {
     title = "Events (C-i: toggle filter)",
     format = format_event,
     finder = finder,
   }))
+end
+
+function M.events_pick_all()
+  M.events_pick()
 end
 
 return M
