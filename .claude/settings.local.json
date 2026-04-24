@@ -55,7 +55,17 @@
       "Read(//Users/mbfisher/Applications/**)",
       "Read(//Users/mbfisher/.config/zellij/plugins/**)",
       "Read(//Users/mbfisher/.config/**)",
-      "Bash(chmod +x *)"
+      "Bash(chmod +x *)",
+      "WebFetch(domain:lazy.folke.io)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Skill(commit-commands:commit)",
+      "Bash(open ~/Applications/ClaudeZellijWhip.app --args notify --title 'Claude Code' --message 'Debug test' --folder 'dotfiles')",
+      "Bash(log show *)",
+      "Bash(~/Applications/ClaudeZellijWhip.app/Contents/MacOS/claude-zellij-whip notify *)",
+      "Bash(kill 57409)",
+      "Bash(open ~/Applications/ClaudeZellijWhip.app --args notify --title 'Claude Code' --message 'After kill test' --folder 'dotfiles')"
     ],
     "deny": [],
     "ask": []
