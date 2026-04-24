@@ -150,11 +150,11 @@ New plugins and features must include a test file in `tests/`. Each test case sh
 Each plugin file must start with a header comment that explains how it works for both AIs and
 developers. The comment should cover:
 - What the plugin does (one-line summary)
-- User-facing keymaps or commands it provides
+- Public API functions it exposes
 - How it works internally (the search strategy, data flow, or key algorithm)
 - Any non-obvious assumptions (e.g. expected directory structure, rg patterns, cwd)
 
-See `event_picker.lua` and `api_picker.lua` for examples.
+See `api.lua`, `events.lua`, and `pickers/snacks.lua` for examples.
 
 ## Nerd Font Icons
 
