@@ -1,0 +1,1 @@
+Consult the keybind documentation at https://ghostty.org/docs/config/keybind for valid key names and trigger syntax before suggesting keybind changes. Note that key names like `left_bracket` are derived from Chromium keycodes, not the literal characters.

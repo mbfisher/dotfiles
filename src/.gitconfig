@@ -24,7 +24,7 @@
     squash = "! git-squash"
     as = "! git add -u . && git s"
     nb = "! f() { ~/bin/git-new-branch.sh \"$1\"; }; f"
-    up = "! git fetch && git pull --rebase"
+    up = "! git-up.sh"
 
 [push]
 	default = current
@@ -37,3 +37,18 @@
 # Something to do with cloning Go Modules at Mercarto
 [url "git@gitlab.com:"]
 	insteadOf = https://gitlab.com/
+
+[delta "tokyonight"]
+    dark = true
+    syntax-theme = base16
+    minus-style = syntax "#3b2c3b"
+    minus-non-emph-style = syntax "#3b2c3b"
+    minus-emph-style = syntax bold ul "#4a3040"
+    minus-empty-line-marker-style = syntax "#3b2c3b"
+    plus-style = syntax "#243d50"
+    plus-non-emph-style = syntax "#243d50"
+    plus-emph-style = syntax bold ul "#2e4f5f"
+    plus-empty-line-marker-style = syntax "#243d50"
+    line-numbers-minus-style = "#914c54"
+    line-numbers-plus-style = "#449dab"
+    line-numbers-zero-style = "#3b4261"

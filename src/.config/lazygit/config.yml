@@ -1,0 +1,11 @@
+gui:
+  scrollHeight: 20
+  showCommandLog: false
+  showBottomLine: true
+os:
+  # Open files in parent neovim instance when running lazygit inside nvim
+  editPreset: "nvim-remote"
+git:
+  pagers:
+    # - pager: delta --paging=never --side-by-side --features=tokyonight
+    - pager: delta --paging=never --features=tokyonight

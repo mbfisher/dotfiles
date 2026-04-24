@@ -3,7 +3,12 @@ idiomatic_version_file_enable_tools = []
 experimental = true
 
 [tools]
-"npm:@anthropic-ai/claude-code" = "latest"
 "npm:eas-cli" = "latest"
-node = "22"
+"npm:@google/gemini-cli" = "latest"
+uv = "latest" # Python package runner, used to run nvim-mcp via uvx
+node = "22.12"
 go = "latest"
+
+[env]
+# Make lazygit use this as it's config directory base
+XDG_CONFIG_HOME = "{{env.HOME}}/.config"

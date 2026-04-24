@@ -1,9 +1,18 @@
 layout {
-    pane stacked=true {
-        pane
-        pane command="nvim"
-        pane command="mise" {
-            args "exec" "--" "claude"
+    // tab-bar at top so new-tab gets the same chrome as the session
+    pane size=1 borderless=true {
+        plugin location="zellij:tab-bar"
+    }
+
+    pane split_direction="vertical" {
+        pane stacked=true size="33%" {
+          pane command="mise" {
+              args "exec" "--" "claude"
+          }
+        }
+        pane stacked=true {
+            pane command="nvim"
+            pane name="shell" focus=true
         }
     }
 

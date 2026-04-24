@@ -53,3 +53,13 @@ keybind = super+shift+r=reload_config
 macos-option-as-alt = left
 keybind = alt+left=unbind
 keybind = alt+right=unbind
+
+# Option+3 to type # (needed because macos-option-as-alt absorbs the keypress)
+keybind = alt+3=text:#
+
+# Cmd+[ / Cmd+] to navigate cursor position history (nvim jumplist)
+# Sends CSI u encoded Cmd+[ and Cmd+] (codepoints 91/93, modifier 9=super)
+# so the sequences pass through Zellij to nvim's <D-[> / <D-]> keymaps
+# Uses `[` / `]` key names to override Ghostty's default goto_split:previous/next binds
+keybind = super+[=text:\x1b[91;9u
+keybind = super+]=text:\x1b[93;9u

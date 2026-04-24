@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Script to create a new git branch with proper setup
-# Usage: ./new-branch.sh <branch-name>
+# Script to update current branch by rebasing on origin/master
+# Usage: git up
 
 # Color codes
 GRAY='\033[90m'
@@ -24,26 +24,16 @@ git() {
     return $exit_code
 }
 
-# Check if branch name is provided
-if [ $# -eq 0 ]; then
-    echo "Error: Branch name is required"
-    echo "Usage: $0 <branch-name>"
+CURRENT_BRANCH=$(command git rev-parse --abbrev-ref HEAD 2>/dev/null)
+if [ -z "$CURRENT_BRANCH" ]; then
+    echo "Error: Not in a git repository"
     exit 1
 fi
 
-BRANCH_NAME="$1"
-
-# Validate branch name (basic check)
-if [[ ! "$BRANCH_NAME" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
-    echo "Error: Invalid branch name. Use only letters, numbers, hyphens, underscores, and forward slashes."
-    exit 1
-fi
-
-echo "> Creating new branch: $BRANCH_NAME"
+echo "> Updating branch: $CURRENT_BRANCH"
 
 # Step 1: Check if there are changes to stash
 echo "Checking for changes to stash..."
-STASHED=false
 
 HAS_STAGED=$(command git diff --cached --quiet; echo $?)
 HAS_UNSTAGED=$(command git diff --quiet; echo $?)
@@ -59,7 +49,7 @@ if [ "$HAS_STAGED" -ne 0 ] || [ "$HAS_UNSTAGED" -ne 0 ] || [ -n "$HAS_UNTRACKED"
 
     # Stash everything including untracked files
     echo "> Stashing changes..."
-    git stash push --include-untracked -m "Auto-stash before creating branch $BRANCH_NAME"
+    git stash push --include-untracked -m "Auto-stash before git up on $CURRENT_BRANCH"
     if [ $? -ne 0 ]; then
         echo "Error: Failed to stash changes"
         rm -f "$STAGED_PATCH"
@@ -71,40 +61,37 @@ else
     echo "No changes to stash"
 fi
 
-# Step 2: Checkout master and pull
-echo "> Switching to master and pulling latest changes..."
-git checkout master
+# Step 3: Fetch from origin
+echo "> Fetching from origin..."
+git fetch origin
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to checkout master branch"
+    echo "Error: Failed to fetch from origin"
     if [ "$STASHED" = true ]; then
-        echo "Note: Your changes are still in the stash."
-    fi
-    rm -f "$STAGED_PATCH"
-    exit 1
-fi
-git pull origin master
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to pull from origin/master"
-    if [ "$STASHED" = true ]; then
-        echo "Note: Your changes are still in the stash."
+        echo "> Popping stashed changes..."
+        git stash pop
     fi
     rm -f "$STAGED_PATCH"
     exit 1
 fi
 
-# Step 3: Check out new branch
-echo "> Creating and switching to new branch: $BRANCH_NAME"
-git checkout -b "$BRANCH_NAME"
+# Step 4: Rebase on origin/master
+echo "> Rebasing on origin/master..."
+git rebase origin/master
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to create and checkout new branch"
+    echo "Error: Rebase failed"
+    echo "You may need to resolve conflicts manually."
+    echo "  - Run 'git rebase --continue' after resolving conflicts"
+    echo "  - Or run 'git rebase --abort' to cancel the rebase"
     if [ "$STASHED" = true ]; then
-        echo "Note: Your changes are still in the stash."
+        echo "Note: Your changes are still in the stash. Run 'git stash pop' after resolving."
+        if [ -n "$STAGED_PATCH" ] && [ -s "$STAGED_PATCH" ]; then
+            echo "Note: Staged changes patch saved at: $STAGED_PATCH"
+        fi
     fi
-    rm -f "$STAGED_PATCH"
     exit 1
 fi
 
-# Step 4: Pop stash if something was stashed
+# Step 5: Pop stash if something was stashed
 if [ "$STASHED" = true ]; then
     echo "> Popping stashed changes..."
     git stash pop
@@ -128,5 +115,4 @@ if [ "$STASHED" = true ]; then
     echo "> Stashed changes restored"
 fi
 
-echo "> ✅ Successfully created and switched to branch: $BRANCH_NAME"
-echo "> You can now continue working on your changes."
+echo "> ✅ Successfully rebased $CURRENT_BRANCH on origin/master"

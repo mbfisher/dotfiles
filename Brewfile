@@ -1,4 +1,5 @@
 brew "coreutils"
+brew "bash" # bash v4 instead of default v3.2
 brew "gh"
 brew "jq"
 brew "ncdu" # show disk usage in a directory - good for cleaning up large caches

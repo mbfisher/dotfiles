@@ -18,6 +18,12 @@ require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+    -- import LazyVim extras (must come before user plugins)
+    -- prettier: formats code on save via conform.nvim
+    -- eslint: shows lint errors in editor; its "format on save" is redundant with prettier
+    --         (note: removing unused imports is handled by autocmd in config/autocmds.lua)
+    { import = "lazyvim.plugins.extras.formatting.prettier" },
+    { import = "lazyvim.plugins.extras.linting.eslint" },
     -- import/override with your plugins
     { import = "plugins" },
   },

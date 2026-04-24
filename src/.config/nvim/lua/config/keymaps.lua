@@ -11,6 +11,11 @@ vim.keymap.set({ "n", "v" }, "y", '"+y', { desc = "Yank to system clipboard" })
 vim.keymap.set("n", "Y", '"+Y', { desc = "Yank to end of line to system clipboard" })
 vim.keymap.set("n", "yy", '"+yy', { desc = "Yank line to system clipboard" })
 
+-- Cmd+[ / Cmd+] to navigate jumplist (cursor position history)
+-- Ghostty sends CSI u sequences for these; see ghostty/config
+vim.keymap.set("n", "<D-[>", "<C-o>", { desc = "Jump to previous cursor position" })
+vim.keymap.set("n", "<D-]>", "<C-i>", { desc = "Jump to next cursor position" })
+
 -- Paste from system clipboard
 vim.keymap.set({ "n", "v" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>P", '"+P', { desc = "Paste from system clipboard (before)" })
