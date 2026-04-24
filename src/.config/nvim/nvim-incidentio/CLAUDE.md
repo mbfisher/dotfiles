@@ -123,6 +123,15 @@ the plugin(s) that were modified. New plugins and features must include a test f
    the result matches the expected outcome
 5. Report pass/fail for each case
 
+### Test both the data layer AND the picker
+
+Testing the data layer (calling `find()`, `find_all()` via `:lua`) is not sufficient. You must
+also invoke the actual picker functions (`picker.api_pick()`, `picker.events_pick_all()`, etc.)
+and check `:messages` for errors. Snacks pickers won't render in headless mode, but they will
+surface Lua errors — a picker that silently does nothing in headless is likely crashing. Always
+check `:messages` after invoking a picker function. Data functions returning correct results does
+not mean the picker adapter is wired up correctly.
+
 ### Bug fixes: TDD approach
 
 When fixing a bug, always use test-driven development:
