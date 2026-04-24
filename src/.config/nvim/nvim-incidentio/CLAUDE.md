@@ -160,8 +160,8 @@ See `event_picker.lua` and `api_picker.lua` for examples.
 
 ### Which-key menu items
 
-Always use the nf-md-fire icon (`󰈸`, orange) for any which-key menu items registered by this
-plugin. This is set in `init.lua` and should not change.
+The plugin does not depend on which-key. Users who want the nf-md-fire icon (orange) can
+add a which-key `icons.rules` entry matching the plugin name — see README.md for the snippet.
 
 ### Choosing icons
 
@@ -185,11 +185,12 @@ and give you the name (e.g. `nf-md-lightning_bolt`). To get the actual Unicode c
 
 ### Picker style
 
-Pickers should follow the pattern established in `event_picker.lua` and `api_picker.lua`:
+Pickers should follow the pattern established in `pickers/snacks.lua` and `pickers/telescope.lua`:
+- Badge definitions and filter mode constants live in the core module (e.g. `api.badges`, `events.filter_modes`)
+- Each picker adapter handles its own formatting using the core module's badge constants
+- Snacks adapter uses `Snacks.picker.format.filename(item, picker)` for file paths
+- Telescope adapter uses `entry_display.create()` for column layout
 - Nerd Font icon badge per item kind, colored with `DiagnosticInfo`/`DiagnosticWarn`/`DiagnosticHint`
-- Item name in normal foreground (prominent by position, not color)
-- File path via `Snacks.picker.format.filename(item, picker)` with line number in `SnacksPickerRow`
-- Optional code snippet in `SnacksPickerComment`
 - `text` field should contain only what the user would intuitively search for (e.g. event name,
   method name) — not code or file paths
 - `<C-i>` filter toggle cycling through item kinds
