@@ -11,7 +11,7 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 BUILD_DIR="$(mktemp -d)"
 
 # The notification hook command that replaces terminal-notifier
-WHIP_COMMAND='open ~/Applications/ClaudeZellijWhip.app --args notify --title '\''Claude Code'\'' --message '\''Waiting for your input'\'' --folder ${CLAUDE_PROJECT_DIR##*/}'
+WHIP_COMMAND='open -n ~/Applications/ClaudeZellijWhip.app --args notify --title '\''Claude Code'\'' --message '\''Waiting for your input'\'' --folder ${CLAUDE_PROJECT_DIR##*/}'
 
 cleanup() {
   rm -rf "$BUILD_DIR"
@@ -88,7 +88,7 @@ echo ""
 read -rp "Send a test notification? [Y/n] " REPLY
 REPLY="${REPLY:-Y}"
 if [ "$REPLY" = "Y" ] || [ "$REPLY" = "y" ]; then
-  open "$HOME/Applications/ClaudeZellijWhip.app" --args notify \
+  open -n "$HOME/Applications/ClaudeZellijWhip.app" --args notify \
     --title "Claude Code" \
     --message "Test notification from install script" \
     --folder "dotfiles"

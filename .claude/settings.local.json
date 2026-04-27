@@ -65,7 +65,17 @@
       "Bash(log show *)",
       "Bash(~/Applications/ClaudeZellijWhip.app/Contents/MacOS/claude-zellij-whip notify *)",
       "Bash(kill 57409)",
-      "Bash(open ~/Applications/ClaudeZellijWhip.app --args notify --title 'Claude Code' --message 'After kill test' --folder 'dotfiles')"
+      "Bash(open ~/Applications/ClaudeZellijWhip.app --args notify --title 'Claude Code' --message 'After kill test' --folder 'dotfiles')",
+      "Bash(open ~/Applications/ClaudeZellijWhip.app)",
+      "Bash(open -n ~/Applications/ClaudeZellijWhip.app --args notify --title 'Claude Code' --message 'open -n test' --folder 'dotfiles')",
+      "Skill(nvim-plugin-dev)",
+      "mcp__nvim-mcp__connect",
+      "mcp__nvim-mcp__send_command",
+      "mcp__nvim-mcp__send_keys",
+      "mcp__nvim-mcp__get_state",
+      "Bash(git stash *)",
+      "Bash(vhs *)",
+      "Bash(system_profiler SPFontsDataType)"
     ],
     "deny": [],
     "ask": []
