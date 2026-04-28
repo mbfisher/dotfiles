@@ -1,1 +1,6 @@
 .DS_Store
+
+# Brainstorming/planning artefacts written by the superpowers skills.
+# These are session-local working notes — keep them out of the repo so they
+# don't accumulate as commits while iterating on tasks.
+docs/superpowers/
