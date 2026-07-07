@@ -8,7 +8,6 @@
       "Read(//Users/mbfisher/Applications/**)",
       "Read(//Library/Application Support/org.pqrs/**)",
       "Read(//tmp/**)",
-
       "WebFetch(domain:github.com)",
       "WebFetch(domain:api.github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
@@ -20,11 +19,9 @@
       "WebFetch(domain:www.nerdfonts.com)",
       "WebFetch(domain:registry.npmjs.org)",
       "WebFetch(domain:www.npmjs.com)",
-
       "Skill(update-config)",
       "Skill(commit-commands:commit)",
       "Skill(nvim-plugin-dev)",
-
       "mcp__plugin_context7_context7__query-docs",
       "mcp__plugin_context7_context7__resolve-library-id",
       "mcp__plugin_slack_slack__slack_read_thread",
@@ -35,5 +32,8 @@
     ],
     "deny": [],
     "ask": []
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }
