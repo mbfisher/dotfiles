@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/mbfisher/.config/**)",
+      "Edit(//Users/mbfisher/.config/**)",
+      "Read(//Users/mbfisher/.claude/**)",
+      "Read(//Users/mbfisher/Library/Preferences/**)",
+      "Read(//Users/mbfisher/Applications/**)",
+      "Read(//Library/Application Support/org.pqrs/**)",
+      "Read(//tmp/**)",
+
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:www.lazyvim.org)",
+      "WebFetch(domain:lazy.folke.io)",
+      "WebFetch(domain:neovimcraft.com)",
+      "WebFetch(domain:ghostty.org)",
+      "WebFetch(domain:zellij.dev)",
+      "WebFetch(domain:www.nerdfonts.com)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:www.npmjs.com)",
+
+      "Skill(update-config)",
+      "Skill(commit-commands:commit)",
+      "Skill(nvim-plugin-dev)",
+
+      "mcp__plugin_context7_context7__query-docs",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_slack_slack__slack_read_thread",
+      "mcp__nvim-mcp__connect",
+      "mcp__nvim-mcp__send_command",
+      "mcp__nvim-mcp__send_keys",
+      "mcp__nvim-mcp__get_state"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,22 +1,44 @@
+// Workflow this layout is built for:
+//   - Vertical split: claude on the left (33%), nvim + shell stacked on the right.
+//   - Alt z fullscreens the focused pane while preserving the split; Alt z again restores it.
+//     Use this to give nvim the whole screen while coding, then reveal claude again instantly.
+//   - Alt [ / Alt ] resize the vertical split by ~30% (one direction-less Resize step, which
+//     is coarse inside stacked panes). They anchor on the left/claude pane (MoveFocus left;
+//     Resize; MoveFocus right) so they behave the same whatever pane is focused — Alt ] grows
+//     claude, Alt [ shrinks it. Replaces the previous swap-layout cycle (swap-layouts have
+//     fixed pane-slot counts and shuffle added panes across the split). NB: directional Resize
+//     ("Decrease Right" etc.) is a no-op in stacked layouts — see issues/003.
+//   - Alt +/- resize the focused pane by ~5% steps (zellij's hardcoded Resize step).
+//   - Do NOT use Alt +/- to "go fullscreen": with stacked_resize=true (default) repeated resizes
+//     collapse the other pane into a stack and Alt - won't restore the split. Alt z is the
+//     non-destructive alternative.
+// The Alt z and Alt [ / Alt ] bindings live in src/.config/zellij/config.kdl.
+//
+// default_tab_template wraps every tab in tab-bar + status-bar chrome. Originally added to keep
+// chrome consistent across swap-layout variants; still useful for new-tab consistency.
 layout {
-    // tab-bar at top so new-tab gets the same chrome as the session
-    pane size=1 borderless=true {
-        plugin location="zellij:tab-bar"
-    }
-
-    pane split_direction="vertical" {
-        pane stacked=true size="33%" {
-          pane command="mise" {
-              args "exec" "--" "claude"
-          }
+    default_tab_template {
+        // tab-bar at top so new-tab gets the same chrome as the session
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
         }
-        pane stacked=true {
-            pane command="nvim"
-            pane name="shell" focus=true
+        children
+        pane size=1 borderless=true {
+            plugin location="zellij:status-bar"
         }
     }
 
-    pane size=1 borderless=true {
-        plugin location="zellij:status-bar"
+    tab {
+        pane split_direction="vertical" {
+            pane stacked=true size="33%" {
+                pane command="mise" {
+                    args "exec" "--" "claude"
+                }
+            }
+            pane stacked=true {
+                pane command="nvim" focus=true
+                pane name="shell"
+            }
+        }
     }
 }

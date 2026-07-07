@@ -2,6 +2,13 @@
 
 This is a **LazyVim** configuration. The goal is minimal customization on top of LazyVim defaults.
 
+## Target Versions
+
+- **Neovim 0.12+** (currently 0.12.2). Anything below 0.12 is unsupported — don't write
+  compatibility shims back to 0.11 unless explicitly asked. Notably, 0.12 ships `vim.lsp.config`
+  with an async `root_dir(bufnr, on_dir)` signature; see the gotcha below.
+- **LazyVim** latest (managed via `:Lazy`).
+
 ## Before Making ANY Changes
 
 1. **Read the existing config first** - Check `lua/plugins/` for existing customizations
@@ -9,7 +16,7 @@ This is a **LazyVim** configuration. The goal is minimal customization on top of
 3. **Check `lazyvim.json`** - See which LazyVim extras are enabled
 4. **Don't assume plugins** - This config has changed significantly from LazyVim defaults
 
-## Critical: Current Plugin Stack (2025)
+## Critical: Current Plugin Stack (2026)
 
 LazyVim has replaced many popular plugins. **Do NOT suggest configs for deprecated plugins.**
 
@@ -86,18 +93,18 @@ return {
 
 ### LazyDev Type Completions
 
-When a plugin ships LuaLS type annotations (check for `@class` in its source), add two things to
-get completions on `opts`:
+When a plugin ships LuaLS type annotations (check for `@class` in its source), pair two
+annotations on the `opts` table:
 
-1. A **lazydev library entry** in the same file, so LuaLS loads the plugin's types
-2. A **`---@type` annotation** on the `opts` table
+1. **`---@module 'plugin-name'`** — lazydev detects this (and `require()` calls) and loads the
+   plugin's `lua/` dir into LuaLS's workspace
+2. **`---@type PluginConfig`** — gives you completions on the `opts` table itself
 
 ```lua
 return {
-  -- LazyDev merges library entries across all plugin files
-  { "folke/lazydev.nvim", opts = { library = { { path = "plugin-name", words = { "plugin" } } } } },
   {
     "author/plugin-name",
+    ---@module 'plugin-name'
     ---@type PluginConfig
     opts = {
       -- You now get completions here
@@ -111,15 +118,32 @@ To find the config type name, grep the plugin source for `@class.*Config`:
 grep -r '@class.*Config' ~/.local/share/nvim/lazy/plugin-name/lua/
 ```
 
-**Plugins that don't need this:** ones where you call `require("plugin").setup(opts)` in a
-`config` function — lazydev auto-loads types from `require()` calls.
+After adding the annotations, `:LspRestart lua_ls` so LuaLS picks up the new workspace library.
+
+**Avoid the older `library` entry pattern** (`{ "folke/lazydev.nvim", opts = { library = { ... } } }`)
+unless the plugin doesn't ship a top-level Lua module matching its name. The `---@module` form is
+canonical (it's what blink.cmp's own docs use) and keeps each plugin's type loading colocated with
+its own spec.
 
 ## Known Gotchas in This Config
 
 ### Monorepo Go Projects
 - Go projects may have `go.mod` in subdirectories (e.g., `server/go.mod`)
-- gopls needs the correct root directory - check `lsp-monorepo.lua`
+- gopls needs the correct root directory - check `lsp-monorepo.lua` and `go-lsp.lua`
 - The ginkgo adapter has special `dlvCwd` handling for this
+- `go-lsp.lua` overrides `root_dir` to return `nil` for paths under `/pkg/mod/`. Without this,
+  jumping to a Go module dependency makes lspconfig find the dep's own `go.mod` and spawn a
+  *second* gopls rooted there — two long-lived servers compete for CPU/RAM and race on the shared
+  `-logfile`. Trade-off: dep files open without LSP features (no hover/goto inside deps).
+
+### Async `root_dir` signature (Neovim 0.12)
+nvim 0.12's `vim.lsp.config` invokes `root_dir` as `(bufnr, on_dir)` — the first arg is a buffer
+number, and the resolved root must be passed back via `on_dir(result)` rather than returned. Older
+lspconfig codepaths still call `(fname)` and use the return value. New `root_dir` callbacks must
+handle both signatures or risk `attempt to index local 'fname' (a number value)` errors when the
+async path fires (e.g. on BufReadPost from a snacks picker jump). See `go-lsp.lua` for the pattern:
+type-check the first arg, resolve `fname` from bufnr if needed, then either call `on_dir(result)`
+or return.
 
 ### Testing (neotest)
 - Go: Uses `nvim-neotest-ginkgo` adapter (NOT standard golang adapter)

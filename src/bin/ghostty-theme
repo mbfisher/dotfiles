@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Toggle Ghostty between its built-in default (dark) and Atom One Light, then
+# cascade the change to any running nvim instances via SIGUSR1. Decouples
+# the terminal stack from macOS dark/light so the rest of the desktop
+# doesn't flip with it.
+#
+# Usage:
+#   ghostty-theme            # toggle
+#   ghostty-theme dark       # force dark
+#   ghostty-theme light      # force light
+
+set -euo pipefail
+
+THEME_FILE="${HOME}/.config/ghostty/theme.conf"
+LIGHT_LINE='theme = Atom One Light'
+
+# Detect current state from the theme file. Missing or empty file → dark
+# (Ghostty's compiled-in default colors are dark).
+current="dark"
+if [[ -f "$THEME_FILE" ]] && grep -q "Atom One Light" "$THEME_FILE"; then
+  current="light"
+fi
+
+target="${1:-}"
+if [[ -z "$target" ]]; then
+  target=$([[ "$current" == "light" ]] && echo "dark" || echo "light")
+fi
+
+case "$target" in
+  dark)
+    # Empty include → no `theme` set → Ghostty's built-in defaults take over.
+    : > "$THEME_FILE"
+    ;;
+  light)
+    echo "$LIGHT_LINE" > "$THEME_FILE"
+    ;;
+  *)
+    echo "Usage: $0 [dark|light]" >&2
+    exit 1
+    ;;
+esac
+
+# Ghostty has no external IPC for reload, so we synthesise the keybind
+# (super+shift+r is bound to reload_config in ghostty/config). Sending the
+# keystroke via System Events targets whichever app is frontmost — fine when
+# this script is run from inside Ghostty, which is the expected case.
+osascript -e 'tell application "System Events" to keystroke "r" using {command down, shift down}' >/dev/null 2>&1 || true
+
+# Nudge running nvim instances to re-read theme.conf and re-apply onedark.
+# pkill is a no-op when no nvim is running.
+pkill -USR1 -x nvim 2>/dev/null || true
+
+echo "Ghostty theme: $target"

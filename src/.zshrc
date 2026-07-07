@@ -189,6 +189,66 @@ zn() {
   zellij --session "$session_name" --new-session-with-layout repo
 }
 
+# tmux equivalents of za/zn: ta attaches (or creates), tn nukes and recreates.
+# The repo layout matches what the C-b Tab swap binding expects: window
+# `main` with claude on the left and nvim on the right, plus a hidden
+# `holder` window whose shell pane gets swapped into main.2 on demand.
+# Session name is the cwd basename, with `:` and `.` rewritten to `_`
+# because tmux disallows them in session names.
+ta() {
+  local session_name="${PWD##*/}"
+  session_name="${session_name//[:.]/_}"
+  if tmux has-session -t="$session_name" 2>/dev/null; then
+    echo "Found existing '${session_name}' session, attaching..."
+  else
+    echo "No existing '${session_name}' found, creating..."
+    _tmux_repo_layout "$session_name"
+  fi
+  _tmux_enter "$session_name"
+}
+
+tn() {
+  local session_name="${PWD##*/}"
+  session_name="${session_name//[:.]/_}"
+  if tmux has-session -t="$session_name" 2>/dev/null; then
+    echo "Destroying existing '${session_name}' session..."
+    tmux kill-session -t "$session_name"
+  else
+    echo "No existing '${session_name}' session found"
+  fi
+  echo "Creating session..."
+  _tmux_repo_layout "$session_name"
+  _tmux_enter "$session_name"
+}
+
+# Build the repo layout for a named tmux session. The right pane (nvim)
+# starts at 66% of the window width — claude at 33% on the left. Resize
+# has to be deferred via a one-shot client-attached hook because the
+# detached session is sized 80x24; percentages applied at split time
+# get converted to absolute cells and don't survive the resize when the
+# client attaches with a real terminal size.
+_tmux_repo_layout() {
+  local session_name="$1"
+  tmux new-session -d -s "$session_name" -n main -c "$PWD" 'claude'
+  tmux split-window -h -t "$session_name:main" -c "$PWD" 'nvim'
+  tmux new-window -d -t "$session_name:" -n holder -c "$PWD"
+  tmux set-hook -t "$session_name" client-attached \
+    "resize-pane -t $session_name:main.1 -x 33% ; set-hook -ut $session_name client-attached"
+  # Seed the C-b w width cycle so the next press goes 33 → 50.
+  tmux set-option -g @claude-width 33
+}
+
+# Attach (from outside tmux) or switch-client (from inside) to a session.
+# Falls back to attach if switch-client fails, which happens after killing
+# the session you were just in (your client is no longer attached).
+_tmux_enter() {
+  local session_name="$1"
+  if [[ -n "$TMUX" ]] && tmux switch-client -t "$session_name" 2>/dev/null; then
+    return
+  fi
+  tmux attach-session -t "$session_name"
+}
+
 # Switch to a worktree in a new zellij tab, creating the branch if needed.
 # wt switch cds to the worktree via directives; cd back before running
 # zellij action so mise/direnv restore the original env (otherwise hangs)
@@ -241,3 +301,8 @@ export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
 export PATH="$HOME/bin:$HOME/.local/bin:/opt/homebrew/bin:$PATH"
 
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/mbfisher/.lmstudio/bin"
+# End of LM Studio CLI section
+

@@ -106,8 +106,9 @@ function M.api_pick()
   }))
 end
 
---- Open the event picker. Uses snacks async to run all 4 rg searches in parallel,
---- pushing results as each completes. Pass pick_opts.pattern to pre-fill the search
+--- Open the event picker. Uses snacks async to run rg searches in parallel,
+--- pushing results as each completes — the picker opens immediately with a
+--- spinner and items stream in. Pass pick_opts.pattern to pre-fill the search
 --- (used by events_pick_at_cursor via picker.lua).
 function M.events_pick(pick_opts)
   pick_opts = pick_opts or {}
@@ -124,7 +125,7 @@ function M.events_pick(pick_opts)
       local Async = require("snacks.picker.util.async")
       local async = Async.running()
 
-      -- Launch all 4 rg searches concurrently
+      -- Launch the 4 main rg searches concurrently.
       local outputs = {}
       local done = {}
       local function launch(idx, cmd)
@@ -140,37 +141,49 @@ function M.events_pick(pick_opts)
       launch(3, events.cmd_inline_subscribers())
       launch(4, events.cmd_named_handlers())
 
-      -- Push definitions as soon as ready
-      while not done[1] do
-        async:suspend()
-      end
-      for _, item in ipairs(events.parse_definitions(outputs[1])) do
-        cb(item)
+      -- Push definitions ASAP
+      while not done[1] do async:suspend() end
+      for _, item in ipairs(events.parse_definitions(outputs[1])) do cb(item) end
+
+      -- Push publishers ASAP
+      while not done[2] do async:suspend() end
+      for _, item in ipairs(events.parse_publishers(outputs[2])) do cb(item) end
+
+      -- Push inline subscribers; remember their subscribe() call sites for dedup
+      while not done[3] do async:suspend() end
+      local inline_items, sub_seen = events.parse_inline_subscribers(outputs[3])
+      for _, item in ipairs(inline_items) do cb(item) end
+
+      -- Wait for the named-handler list, then fan out a trace-back rg per handler
+      -- in parallel. Each trace-back finds the subscribe() call site for one named
+      -- handler. We process them in launch order so streaming is predictable; head-
+      -- of-line blocking is bounded by the slowest single rg, which is small.
+      while not done[4] do async:suspend() end
+      local handlers = events.parse_named_handlers(outputs[4])
+
+      if #handlers == 0 then return end
+
+      local tb_outputs = {}
+      local tb_done = {}
+      for i, h in ipairs(handlers) do
+        tb_done[i] = false
+        local pkg_dir = h.file:match("^(.*/)") or ""
+        vim.system({ "sh", "-c", events.cmd_handler_traceback(h.func_name, pkg_dir) }, { text = true }, function(result)
+          tb_outputs[i] = result.code == 0 and result.stdout or ""
+          tb_done[i] = true
+          async:resume()
+        end)
       end
 
-      -- Push publishers as soon as ready
-      while not done[2] do
-        async:suspend()
-      end
-      for _, item in ipairs(events.parse_publishers(outputs[2])) do
-        cb(item)
-      end
-
-      -- Inline subscribers must finish before named handlers (for dedup)
-      while not done[3] do
-        async:suspend()
-      end
-      local inline_items, seen_lines, seen_file_events = events.parse_inline_subscribers(outputs[3])
-      for _, item in ipairs(inline_items) do
-        cb(item)
-      end
-
-      -- Named handlers, deduped against inline subscribers
-      while not done[4] do
-        async:suspend()
-      end
-      for _, item in ipairs(events.parse_named_handlers(outputs[4], seen_lines, seen_file_events)) do
-        cb(item)
+      for i, h in ipairs(handlers) do
+        while not tb_done[i] do async:suspend() end
+        for _, item in ipairs(events.parse_handler_traceback(tb_outputs[i], h.func_name, h.event_name)) do
+          local key = item.file .. ":" .. item.pos[1]
+          if not sub_seen[key] then
+            sub_seen[key] = true
+            cb(item)
+          end
+        end
       end
     end
   end

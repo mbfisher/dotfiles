@@ -3,7 +3,7 @@
 -- fails. We add dlvCwd to tell Delve to run from the go.mod directory instead.
 -- See: https://github.com/go-delve/delve/pull/2660
 local function wrap_ginkgo_adapter()
-  local ginkgo = require("nvim-ginkgo")
+  local ginkgo = require("neotest-ginkgo")
   local original_build_spec = ginkgo.build_spec
 
   ginkgo.build_spec = function(self, args)
@@ -26,7 +26,7 @@ local function is_ginkgo_dir(file_path)
   return vim.fn.filereadable(dir .. "/suite_test.go") == 1
 end
 
--- Warn once if the Go treesitter parser is missing or broken, since nvim-ginkgo
+-- Warn once if the Go treesitter parser is missing or broken, since neotest-ginkgo
 -- silently returns no tests when it can't parse. Common after brew upgrades or
 -- macOS provenance issues (see ~/dotfiles/issues/001-nvim-macos-provenance-crash.md).
 local parser_checked = false
@@ -64,7 +64,7 @@ return {
     opts = function(_, opts)
       opts.adapters = opts.adapters or {}
 
-      -- Make the two Go adapters exclusive: nvim-ginkgo claims files in Ginkgo
+      -- Make the two Go adapters exclusive: neotest-ginkgo claims files in Ginkgo
       -- packages (suite_test.go present), neotest-golang claims the rest. This
       -- avoids neotest's unordered adapter iteration picking the wrong one.
 

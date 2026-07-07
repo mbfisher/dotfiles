@@ -5,6 +5,7 @@ brew "jq"
 brew "ncdu" # show disk usage in a directory - good for cleaning up large caches
 brew "neovim"
 brew "ripgrep"
+brew "tmux"
 cask "ghostty"
 cask "notion"
 cask "raycast"

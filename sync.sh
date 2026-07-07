@@ -1,6 +1,10 @@
 #!/bin/bash
 
 for CONFIG in $(find src/.config -maxdepth 1 -mindepth 1 | sed 's|^src/.config/||'); do
+  if [ "$CONFIG" = ".DS_Store" ]; then
+    continue
+  fi
+
   TARGET="$HOME/.config/$CONFIG"
   SOURCE="$PWD/src/.config/$CONFIG"
 
@@ -22,7 +26,7 @@ for CONFIG in $(find src/.config -maxdepth 1 -mindepth 1 | sed 's|^src/.config/|
 done
 
 for FILE in $(find src -maxdepth 1 -mindepth 1 | sed 's|^src/||'); do
-  if [ "$FILE" = ".config" ] || [ "$FILE" = "CLAUDE.md" ]; then
+  if [ "$FILE" = ".config" ] || [ "$FILE" = "CLAUDE.md" ] || [ "$FILE" = ".DS_Store" ]; then
     continue
   fi
 

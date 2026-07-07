@@ -1,5 +1,14 @@
 This is a "dotfiles" repository of user-specific configuration for MacOS. I'm a professional software engineer.
 
+## Workflow
+
+Make changes directly on the `master` branch. Do NOT create feature branches, worktrees, or pull
+requests unless I explicitly ask for one. This repo is my live config (symlinked into `$HOME`), so
+working straight on `master` is what I want.
+
+Commit and push after every change — I'm bad at remembering to, so treat it as part of the task, not
+an optional extra. Small, frequent commits are fine and preferred over batching.
+
 ## Configuration
 
 The src/ directory contains files that symlinked in to my HOME directory eg:

@@ -71,11 +71,12 @@ package.loaded["incidentio"] = nil
   - `[P]` `server/api/api_webhooks_sentry.go:65`
   - `[S]` `server/app/oncall/alert/incoming/handle_sentry_metric.go:23` (inline subscribe)
   - `[S]` `server/app/oncall/alert/incoming/handle_sentry.go:27` (inline subscribe)
-  - `[S]` `server/integrations/sentry/resource/consume_sentry_webhook_received.go:41`
-    (handler definition — browse-all shows handler defs for named handlers)
-- **Must NOT include:** handler function definitions at handle_sentry.go:57 or
-  handle_sentry_metric.go:49 — those files already have inline subscribe calls for
-  the same event
+  - `[S]` `server/integrations/sentry/resource/service.go:37`
+    (`eventadapter.Subscribe(…, s.ConsumeSentryWebhookReceived, …)` — traced back from
+    the named handler at `consume_sentry_webhook_received.go`)
+- **Must NOT include:** handler function definitions like `ConsumeSentryWebhookReceived`,
+  `handleSentryWebhook`, `handleSentryMetricWebhook` — every subscriber must point to the
+  `subscribe(...)` / `Subscribe(...)` call site, not the func body.
 
 ### 9. Cursor-scoped event picker with method receiver subscriber (gE)
 
@@ -96,15 +97,66 @@ package.loaded["incidentio"] = nil
 - **Verify via find_all():** filter items where `event_name == "MicrosoftTeamsAppInstalledTeam"`
   and assert none have a file path containing `/matchers/`
 
-### 11. No duplicate subscribers from multiline rg matches
+### 11. Named handler traced back to subscribe call site
 
 - **Navigate to:** `server/app/oncall/alert/enqueue_handle_event.go:168` — cursor on `AlertHandleEvent`
 - **Trigger:** `gE`
-- **Expected:** Exactly 1 `[S]` item at line 266 (`subscribe(handleEventFromAsync,`)
-- **Must NOT include:** lines 267 (`SubscribeParams{`) or 268 (`SubscriberID:`) — these are
-  continuation lines from the same multiline rg match, not separate subscribe calls
+- **Expected:** Exactly 1 `[S]` item pointing to the `subscribe(handleEventFromAsync, …)` call
+  (currently around line 274 of `enqueue_handle_event.go`)
+- **Must NOT** point to the `func handleEventFromAsync(…)` definition further down.
+- **Must NOT include** continuation lines from the trace-back's multiline rg match
+  (`SubscribeParams{`, `SubscriberID:`, etc.) — only the `subscribe(` line.
 
-### 12. Filter cycle
+### 12. Prefixed event package (e.g. `oncallevent`)
+
+- **Navigate to:** `server/app/oncall/escalator/executor/transition_notification.go:40` — cursor on
+  `EscalationNotificationTransition` in `&oncallevent.EscalationNotificationTransition{`
+- **Trigger:** `gE`
+- **Expected:** Picker contains named-handler subscribers from other files like
+  `subscriber_invite_paged_user.go`, `subscriber_expire_sms_callbacks.go`,
+  `subscriber_workflows_trigger_escalation_acked.go`.
+- **Regression guard:** Subscriber matching must not require the package import to be literally
+  named `event` — prefixed packages like `oncallevent`, `pkgevent`, `aievent` must also work
+  (the rg patterns must allow a `\w*` prefix before `event\.`).
+
+### 13. Multi-line inline subscribe call
+
+- **Navigate to:** `server/app/oncall/escalator/executor/transition_notification.go:40` — cursor on
+  `EscalationNotificationTransition`
+- **Trigger:** `gE`
+- **Expected:** Picker includes `server/app/oncall/escalator/executor/notification_deliver.go:29`,
+  where the source is laid out as:
+  ```
+  29:		subscribe(
+  30:			func(ctx context.Context, db *gorm.DB, ev *oncallevent.EscalationNotificationTransition, ...) error {
+  ```
+  i.e. `subscribe(` and the `*oncallevent.X` arg are on different lines.
+- **Regression guard:** `parse_inline_subscribers` must correlate the `subscribe(` row with the
+  `*event.X` row from the same multi-line rg match block (same file, sequential line numbers).
+  A naive line-by-line parser would drop this match because neither row alone contains both
+  `subscribe(` and `event.X`. The reported line must be the `subscribe(` line (29), not the
+  `func(...)` continuation line.
+
+### 14. Named handler in same file as subscribe call (trace-back picks the right call)
+
+- **Navigate to:** `server/app/oncall/escalator/executor/transition_notification.go:40` — cursor on
+  `EscalationNotificationTransition`
+- **Trigger:** `gE`
+- **Expected:** Picker includes `server/app/ai/plugin/subscriber_upsert_desktop_marker.go:33` —
+  the `subscribe(onEscalationNotificationTransition, …)` call.
+- **Layout under test:** that file contains TWO back-to-back subscribe calls in the same
+  `init()`:
+  ```
+  25:	subscribe(onUserChanged, …)
+  …
+  33:	subscribe(onEscalationNotificationTransition, …)
+  ```
+  Both end up in one rg multi-line match block when tracing back the handler. The parser
+  must pair each `func_name` occurrence with the *closest preceding* `subscribe(` row in
+  the block, not just the first one. Reporting line 25 would be wrong (that's the
+  `onUserChanged` subscribe).
+
+### 15. Filter cycle
 
 - **Open picker** for any event with `gE`
 - **Invoke** `toggle_event_filter` action 3 times (or `<C-i>` in a real terminal)

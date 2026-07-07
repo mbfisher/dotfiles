@@ -4,3 +4,9 @@
 venv/
 .idea/vcs.xml
 mprocs.yaml
+docs/superpowers/
+
+**/.claude/settings.local.json
+
+# Repo-local Neovim config (loaded via exrc)
+.nvim.lua

@@ -28,6 +28,28 @@ else
   echo "  Installed room.wasm"
 fi
 
+# --- Register room in zellij config (required: whip pipes to it on click) ---
+ZELLIJ_CONFIG="$HOME/.config/zellij/config.kdl"
+ROOM_PLUGIN_URL='file:~/.config/zellij/plugins/room.wasm'
+echo "> Registering room in $ZELLIJ_CONFIG..."
+if [ ! -f "$ZELLIJ_CONFIG" ]; then
+  echo "  Warning: $ZELLIJ_CONFIG not found"
+  echo "  Run 'zellij setup --dump-config > $ZELLIJ_CONFIG' then re-run this script"
+elif grep -q "room.wasm" "$ZELLIJ_CONFIG"; then
+  echo "  room already referenced in $ZELLIJ_CONFIG, skipping"
+elif grep -q '^load_plugins {' "$ZELLIJ_CONFIG"; then
+  sed -i.bak "/^load_plugins {/a\\
+    \"$ROOM_PLUGIN_URL\"
+" "$ZELLIJ_CONFIG"
+  rm "$ZELLIJ_CONFIG.bak"
+  echo "  Added room to load_plugins block"
+  echo "  Note: restart existing zellij sessions for the plugin to load"
+else
+  printf '\nload_plugins {\n    "%s"\n}\n' "$ROOM_PLUGIN_URL" >> "$ZELLIJ_CONFIG"
+  echo "  Appended load_plugins block"
+  echo "  Note: restart existing zellij sessions for the plugin to load"
+fi
+
 # --- ClaudeZellijWhip app ---
 if [ -d "$HOME/Applications/ClaudeZellijWhip.app" ]; then
   echo "> ClaudeZellijWhip.app already installed, skipping (delete to reinstall)"

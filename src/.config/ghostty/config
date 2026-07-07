@@ -37,8 +37,12 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 
-# Atom One theme with automatic dark/light mode switching
-# theme = light:Atom One Light,dark:Atom One Dark
+# Theme is driven by ./theme.conf (gitignored, rewritten by `ghostty-theme`)
+# rather than the `light:…,dark:…` syntax that follows macOS appearance.
+# Lets us toggle terminal-only without flipping every other macOS app.
+# `?` makes the include optional so a fresh checkout (no theme.conf yet)
+# still loads — Ghostty falls back to its built-in default (dark) colors.
+config-file = ?theme.conf
 
 keybind = shift+enter=text:\n
 

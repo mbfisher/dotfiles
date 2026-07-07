@@ -146,8 +146,23 @@ keybinds clear-defaults=true {
         bind "Alt +" { Resize "Increase"; }
         bind "Alt -" { Resize "Decrease"; }
         bind "Alt =" { Resize "Increase"; }
-        bind "Alt [" { PreviousSwapLayout; }
-        bind "Alt ]" { NextSwapLayout; }
+        // Resize the vertical split instead of cycling swap-layouts (swap-layouts have fixed
+        // slot counts and shuffle added claude panes across the split). Always anchor on the
+        // left/claude pane: MoveFocus "left" first, resize THAT pane, then MoveFocus "right"
+        // to return to the editor. Two reasons this is anchored rather than resizing whatever
+        // is focused:
+        //   1. Directional Resize ("Decrease Right" etc.) is a silent no-op inside stacked
+        //      panes (our layout is all stacked=true) — measured empirically in zellij 0.43.1.
+        //      Only the direction-less Resize "Increase"/"Decrease" actually moves a stacked
+        //      split.
+        //   2. Direction-less resize acts on the focused pane, and from the right-hand stack
+        //      (nvim/shell) its first step is erratic/no-op; from the left pane it's clean and
+        //      reversible. Anchoring on claude makes Alt [ / Alt ] behave identically no matter
+        //      what's focused: Alt ] grows claude (~33%→~62%, ≈ the old 33↔66 swap), Alt [
+        //      shrinks it back. One step ≈ 30% in a stacked layout — do NOT chain six.
+        // Trade-off: if you trigger these while focused on claude itself, focus lands on nvim.
+        bind "Alt [" { MoveFocus "left"; Resize "Decrease"; MoveFocus "right"; }
+        bind "Alt ]" { MoveFocus "left"; Resize "Increase"; MoveFocus "right"; }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Ctrl g" { SwitchToMode "locked"; }
         bind "Alt h" { MoveFocusOrTab "left"; }
@@ -159,6 +174,10 @@ keybinds clear-defaults=true {
         bind "Alt o" { MoveTab "right"; }
         bind "Alt p" { TogglePaneInGroup; }
         bind "Alt Shift p" { ToggleGroupMarking; }
+        // Maximise focused pane while preserving the underlying layout (toggle to restore).
+        // Use this instead of Alt +/- when you want a pane full-size — resize would collapse the
+        // others into a stack and lose the split. See src/.config/zellij/layouts/repo.kdl.
+        bind "Alt z" { ToggleFocusFullscreen; }
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "move" {
@@ -272,6 +291,7 @@ plugins {
 // eg. "file:/path/to/my-plugin.wasm"
 // eg. "https://example.com/my-plugin.wasm"
 load_plugins {
+    "file:~/.config/zellij/plugins/room.wasm"
 }
 web_client {
     font "monospace"
