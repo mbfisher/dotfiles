@@ -10,3 +10,8 @@ docs/superpowers/
 
 # Repo-local Neovim config (loaded via exrc)
 .nvim.lua
+
+# worktrunk: only config.toml is real config; approvals.toml, its lock, and
+# config.toml backups are machine-local state that worktrunk regenerates.
+.config/worktrunk/*
+!.config/worktrunk/config.toml
