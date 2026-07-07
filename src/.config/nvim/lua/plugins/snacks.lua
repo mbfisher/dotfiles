@@ -5,10 +5,14 @@ return {
   { "folke/lazydev.nvim", opts = { library = { { path = "snacks.nvim", words = { "snacks" } } } } },
   {
     "folke/snacks.nvim",
-    -- Disable default <leader>gD so diffview.nvim handles it instead
+    -- Keep <leader>gd / <leader>gD clear for diffview. (diffview.lua actively
+    -- claims <leader>gd and <leader>gh, so LazyVim skips its own versions anyway;
+    -- these are belt-and-braces.) LazyVim's lazygit binds (<leader>gg / <leader>gG)
+    -- are intentionally left untouched — unused, but kept so any future upstream
+    -- changes carry through.
     keys = {
-      { "<leader>gd", false }, -- Use diffview instead
-      { "<leader>gD", false }, -- Use diffview instead
+      { "<leader>gd", false }, -- reserved for diffview
+      { "<leader>gD", false }, -- unused
     },
     ---@type snacks.Config
     opts = {
