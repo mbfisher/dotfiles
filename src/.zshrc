@@ -92,8 +92,12 @@ spaceship_dir_short() {
     fi
   fi
 
+  # --suffix " ": the default dir section adds SPACESHIP_DIR_SUFFIX (a space);
+  # overriding the section drops it, so without this the next section (e.g. node)
+  # collides with the dir name -> "sortedvia".
   spaceship::section \
     --color "cyan" \
+    --suffix " " \
     "$dir"
 }
 
