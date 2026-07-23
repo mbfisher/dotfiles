@@ -49,38 +49,6 @@ return {
       -- DiffviewOpen reuses an already-open diffview tab if one exists (switches to it) rather than spawning a duplicate.
       { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Diff view (working changes)" },
       { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "File history" },
-      -- Review a GitHub PR WITHOUT checking it out: fetch the PR head via the raw
-      -- refs/pull/N/head ref into a local-tracking ref, then symmetric-diff it against
-      -- origin/HEAD's merge-base (the true "what this PR changes" view). We fetch origin
-      -- first so origin/HEAD (the base) is current, otherwise the merge-base is stale.
-      -- No --imply-local: the PR branch isn't checked out, so the committed PR files
-      -- (not the working tree) belong on the right side.
-      {
-        "<leader>gp",
-        function()
-          local pr = vim.fn.input("PR number: ")
-          if pr == "" then
-            return
-          end
-          local ref = "origin/pr/" .. pr
-          -- Two refspecs in one fetch: the default branches refspec refreshes all
-          -- remote-tracking branches (so origin/HEAD's base is current), and the pull
-          -- refspec brings the PR head into refs/remotes/origin/pr/N.
-          local out = vim.fn.system({
-            "git",
-            "fetch",
-            "origin",
-            "+refs/heads/*:refs/remotes/origin/*",
-            "pull/" .. pr .. "/head:refs/remotes/" .. ref,
-          })
-          if vim.v.shell_error ~= 0 then
-            vim.notify("git fetch failed:\n" .. out, vim.log.levels.ERROR)
-            return
-          end
-          vim.cmd("DiffviewOpen origin/HEAD..." .. ref)
-        end,
-        desc = "Diff view (review PR by number)",
-      },
     },
     -- Force tabline visible when diffview opens (so tab indicators show even with 1 buffer),
     -- then restore tabline and clean up buffers that diffview opened when it closes.
