@@ -46,23 +46,56 @@ return {
             if item.repo and origin_repo() and item.repo ~= origin_repo() then
               return fallback(item, ctx)
             end
-            local ref = "origin/pr/" .. item.number
+            local pr = item.number
+            local ref = "origin/pr/" .. pr
+            local notif = "diffview-pr-fetch-" .. pr
+
+            -- The fetch is slow on large repos, so run it async (vim.system, non-blocking)
+            -- and animate a spinner notification instead of freezing the UI on vim.fn.system.
+            local done = false
+            local timer = assert(vim.uv.new_timer())
+            timer:start(
+              0,
+              80,
+              vim.schedule_wrap(function()
+                if done then
+                  return
+                end
+                Snacks.notify(Snacks.util.spinner() .. "  Fetching PR #" .. pr .. "…", {
+                  id = notif,
+                  title = "Diffview",
+                  timeout = false, -- keep it up until the fetch finishes
+                })
+              end)
+            )
+
             -- Raw fetch of the PR head (refs/pull/N/head) into a local-tracking ref,
             -- plus the branches refspec so origin/HEAD's merge-base is current. No
             -- checkout — the working tree is left untouched.
-            local out = vim.fn.system({
+            vim.system({
               "git",
               "fetch",
               "origin",
               "+refs/heads/*:refs/remotes/origin/*",
-              "pull/" .. item.number .. "/head:refs/remotes/" .. ref,
-            })
-            if vim.v.shell_error ~= 0 then
-              vim.notify("git fetch failed:\n" .. out, vim.log.levels.ERROR)
-              return
-            end
-            -- Symmetric diff against the merge-base: the true "what this PR changes" view.
-            vim.cmd("DiffviewOpen origin/HEAD..." .. ref)
+              "pull/" .. pr .. "/head:refs/remotes/" .. ref,
+            }, { text = true }, vim.schedule_wrap(function(res)
+              done = true
+              timer:stop()
+              timer:close()
+              if res.code ~= 0 then
+                -- Replace the spinner notification (same id) with the error.
+                Snacks.notify("Fetch failed for PR #" .. pr .. "\n" .. (res.stderr or ""), {
+                  id = notif,
+                  title = "Diffview",
+                  level = "error",
+                  timeout = 5000,
+                })
+                return
+              end
+              Snacks.notify("PR #" .. pr .. " fetched", { id = notif, title = "Diffview", timeout = 1000 })
+              -- Symmetric diff against the merge-base: the true "what this PR changes" view.
+              vim.cmd("DiffviewOpen origin/HEAD..." .. ref)
+            end))
           end
         end,
       })
