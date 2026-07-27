@@ -44,7 +44,11 @@
 # still loads — Ghostty falls back to its built-in default (dark) colors.
 config-file = ?theme.conf
 
-keybind = shift+enter=text:\n
+# Disabled while Claude Code runs inside nvim (claudecode.nvim, left split): sending a
+# literal \n means nvim never sees <S-CR>, so the plugin's newline mapping never fires.
+# Commented out so Ghostty falls back to its CSI u encoding (ESC[13;2u) instead.
+# Re-enable if you go back to running Claude in a bare shell pane.
+# keybind = shift+enter=text:\n
 
 # Handle copy at Ghostty level to prevent "c" being output when using cmd+c in Zellij
 keybind = super+c=copy_to_clipboard
@@ -67,3 +71,12 @@ keybind = alt+3=text:#
 # Uses `[` / `]` key names to override Ghostty's default goto_split:previous/next binds
 keybind = super+[=text:\x1b[91;9u
 keybind = super+]=text:\x1b[93;9u
+
+# Option+[ / Option+] to cycle the nvim left-split width (33/50/66%) — see nvim keymaps.lua.
+# Same CSI u trick as Cmd+[ / Cmd+] above (codepoints 91/93, modifier 3=alt): sending the
+# sequence as literal text means it reaches nvim verbatim through Zellij, rather than depending
+# on Zellij forwarding kitty-protocol encoding. Took over from the Zellij "Alt [" / "Alt ]"
+# pane-resize binds now Claude is an nvim window rather than a pane.
+# Needs the LEFT option key (macos-option-as-alt = left, below).
+keybind = alt+[=text:\x1b[91;3u
+keybind = alt+]=text:\x1b[93;3u

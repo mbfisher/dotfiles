@@ -16,7 +16,9 @@ return {
       terminal = {
         provider = "snacks",
         split_side = "left",
-        split_width_percentage = 0.4,
+        -- 33% to match the shell terminal's default; Option+[ / Option+] cycle it live
+        -- (33/50/66) via the left-split resize keymaps in config/keymaps.lua.
+        split_width_percentage = 0.33,
       },
     },
     keys = {
