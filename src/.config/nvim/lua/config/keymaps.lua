@@ -50,6 +50,25 @@ vim.keymap.set("n", "<leader>fY", function()
   vim.notify(p)
 end, { desc = "Yank absolute path" })
 
+-- Toggle a persistent shell terminal in a LEFT VERTICAL split.
+-- Overrides LazyVim's <C-/> (and <C-_>, what some terminals send for it), which opens
+-- a bottom horizontal split — never wanted here. LazyVim's floating terminals are
+-- untouched on <leader>ft / <leader>fT.
+-- Persistence: Snacks keys terminals on cmd + cwd + env + count, so toggling with the
+-- same args reuses the same shell instead of spawning a new one. cwd is pinned to the
+-- GLOBAL cwd (getcwd(-1)) rather than LazyVim.root() so a buffer with a different
+-- project root can't silently create a second terminal.
+-- Note: snacks' "terminal" style sets stack = true, so this and the Claude Code split
+-- (also position = "left") stack in the same left column rather than fighting over it.
+local function shell_terminal()
+  Snacks.terminal.toggle(nil, {
+    cwd = vim.fn.getcwd(-1),
+    win = { position = "left", width = 0.4 },
+  })
+end
+vim.keymap.set({ "n", "t" }, "<C-/>", shell_terminal, { desc = "Terminal (left split)" })
+vim.keymap.set({ "n", "t" }, "<C-_>", shell_terminal, { desc = "which_key_ignore" })
+
 -- Horizontal mouse scroll (Magic Mouse, Keychron M6 horizontal wheel)
 vim.keymap.set({ "n", "v" }, "<ScrollWheelLeft>", "3zh", { desc = "Scroll left" })
 vim.keymap.set({ "n", "v" }, "<ScrollWheelRight>", "3zl", { desc = "Scroll right" })
