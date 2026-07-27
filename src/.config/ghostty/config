@@ -44,10 +44,12 @@
 # still loads — Ghostty falls back to its built-in default (dark) colors.
 config-file = ?theme.conf
 
-# Disabled while Claude Code runs inside nvim (claudecode.nvim, left split): sending a
-# literal \n means nvim never sees <S-CR>, so the plugin's newline mapping never fires.
-# Commented out so Ghostty falls back to its CSI u encoding (ESC[13;2u) instead.
-# Re-enable if you go back to running Claude in a bare shell pane.
+# Do NOT re-add a shift+enter=text:\n bind. A literal \n is byte 0x0a, which in vim IS <C-j> —
+# and LazyVim maps <C-j> in terminal mode for window navigation, so it moved focus instead of
+# reaching Claude. Ghostty's native encoding (CSI u, ESC[13;2u) works everywhere instead:
+# zellij negotiates kitty keyboard upstream and forwards CSI u to panes that support it, the
+# bare claude CLI requests it, and nvim decodes it to <S-CR> for claudecode.nvim's newline map.
+# See issues/004-shift-enter-claude-inside-nvim.md.
 # keybind = shift+enter=text:\n
 
 # Handle copy at Ghostty level to prevent "c" being output when using cmd+c in Zellij
@@ -73,10 +75,11 @@ keybind = super+[=text:\x1b[91;9u
 keybind = super+]=text:\x1b[93;9u
 
 # Option+[ / Option+] to cycle the nvim left-split width (33/50/66%) — see nvim keymaps.lua.
-# Same CSI u trick as Cmd+[ / Cmd+] above (codepoints 91/93, modifier 3=alt): sending the
-# sequence as literal text means it reaches nvim verbatim through Zellij, rather than depending
-# on Zellij forwarding kitty-protocol encoding. Took over from the Zellij "Alt [" / "Alt ]"
-# pane-resize binds now Claude is an nvim window rather than a pane.
+# Same CSI u trick as Cmd+[ / Cmd+] above (codepoints 91/93, modifier 3=alt). Sending it as
+# literal text is belt-and-braces: Ghostty's native kitty encoding for alt+[ is this same
+# sequence, and zellij does forward CSI u to panes that support it, so this is deterministic
+# rather than strictly necessary. Took over from the Zellij "Alt [" / "Alt ]" pane-resize
+# binds now Claude is an nvim window rather than a pane.
 # Needs the LEFT option key (macos-option-as-alt = left, below).
 keybind = alt+[=text:\x1b[91;3u
 keybind = alt+]=text:\x1b[93;3u
