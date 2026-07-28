@@ -1,41 +1,63 @@
 -- onedark, dark style, fixed. The old light/dark switch (read Ghostty's theme.conf on startup,
 -- re-apply on SIGUSR1 from the `ghostty-theme` script) is gone along with the script and the
--- theme.conf include — never used in practice, and it forced every colour here to be computed
--- for two themes.
+-- theme.conf include — never used in practice.
+--
+-- The goal of the colour tweaks below is that nvim and a bare Ghostty pane are indistinguishable
+-- for the same content. Three separate palettes are in play, which is why this needs three fixes:
+--   1. onedark's syntax palette      -> code. Kept as-is; only `fg` is raised (see below).
+--   2. nvim's g:terminal_color_*     -> ANSI colours inside :terminal buffers.
+--   3. Claude's own hardcoded RGB    -> not themeable at all; it emits truecolor, so it already
+--                                       looks the same inside nvim and out. Nothing to do.
 return {
   {
     "navarasu/onedark.nvim",
     lazy = false,
     priority = 1000,
-    opts = { style = "dark" },
+    opts = {
+      style = "dark",
+      -- Raise body text to Ghostty's foreground. onedark's #abb2bf is 6.6:1 against the
+      -- background where Ghostty's white is 14:1, and that one value — not the accent hues, which
+      -- measure within 0.1 of each other — is the whole reason code looked washed out next to a
+      -- terminal. Accents stay onedark's: Ghostty's ANSI palette is Tomorrow Night, 33% less
+      -- saturated, which would flatten code rather than sharpen it.
+      colors = { fg = "#ffffff" },
+    },
     config = function(_, opts)
       require("onedark").setup(opts)
       require("onedark").load()
 
-      -- Terminal splits (shell + Claude Code) should look identical to the same program in a
-      -- bare Ghostty pane. snacks maps their Normal to SnacksNormal, which resolves to onedark's
-      -- NormalFloat — bg1 #31353f, measurably lighter than the #282c34 outside nvim — making
-      -- Claude's output look washed out and its text dim by comparison. Pin these windows to
-      -- Ghostty's own built-in defaults instead. Applied by styles.terminal in snacks.lua.
-      -- Re-run on ColorScheme because loading a scheme clears custom highlight groups.
-      -- The terminal/code boundary gets a hard white rule rather than onedark's near-invisible
-      -- separator: with a terminal split open permanently, it's the one border worth seeing.
-      -- The left window owns a vertical separator column, and our terminals are always on the
-      -- left, so this only ever colours the terminal-to-code edge (plus shell-to-Claude when
-      -- both are stacked). Code-to-code splits keep onedark's WinSeparator.
-      -- Background is read from the active scheme's Normal rather than hardcoded, so switching
-      -- colorschemes live (`:colorscheme X`, or <leader>uC) keeps the terminal panes in step
-      -- instead of stranding them on onedark's background. Only the foreground is pinned: Claude
-      -- draws its body text in the terminal's default fg, and white is what it gets in a bare
-      -- Ghostty pane (Ghostty's default foreground).
-      local function set_terminal_hl()
+      -- Ghostty's built-in palette (`ghostty +show-config --default | grep palette`), which is
+      -- Tomorrow Night. Terminal buffers render ANSI colours through g:terminal_color_*, and
+      -- onedark fills those from its own more saturated palette — so `ls` in the nvim shell split
+      -- came out punchier than the identical command in a bare zellij pane. Pinning them here
+      -- makes a shell inside nvim match one outside it. Code is unaffected: syntax highlighting
+      -- uses onedark's palette, not these.
+      local ghostty_palette = {
+        "#1d1f21", "#cc6666", "#b5bd68", "#f0c674", "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6",
+        "#666666", "#d54e53", "#b9ca4a", "#e7c547", "#7aa6da", "#c397d8", "#70c0b1", "#eaeaea",
+      }
+
+      -- Terminal splits (shell + Claude Code) get their own Normal so they match a bare Ghostty
+      -- pane: snacks otherwise maps them to SnacksNormal -> onedark's NormalFloat (bg1 #31353f,
+      -- lighter than the surrounding background). Background follows the active scheme's Normal so
+      -- switching colorschemes keeps them in step; foreground is pinned to Ghostty's white, kept
+      -- separate from onedark's `fg` above so code brightness can be tuned without touching the
+      -- terminals. TerminalWinSeparator gives the terminal/code edge a visible rule — onedark's
+      -- WinSeparator is #3b3f4c, about 1.2:1. The left window owns a vertical separator column and
+      -- the terminals are always on the left, so code-to-code splits keep onedark's version.
+      -- Both are re-applied on ColorScheme, which clears custom groups and re-runs onedark's own
+      -- terminal_color_* assignment.
+      local function apply_terminal_colours()
+        for i, hex in ipairs(ghostty_palette) do
+          vim.g["terminal_color_" .. (i - 1)] = hex
+        end
         local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
         local bg = normal.bg and ("#%06x"):format(normal.bg) or "#282c34"
         vim.api.nvim_set_hl(0, "TerminalNormal", { fg = "#ffffff", bg = bg })
         vim.api.nvim_set_hl(0, "TerminalWinSeparator", { fg = "#ffffff", bg = bg })
       end
-      set_terminal_hl()
-      vim.api.nvim_create_autocmd("ColorScheme", { callback = set_terminal_hl })
+      apply_terminal_colours()
+      vim.api.nvim_create_autocmd("ColorScheme", { callback = apply_terminal_colours })
     end,
   },
 
