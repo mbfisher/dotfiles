@@ -156,6 +156,52 @@ function M.toggle_shell()
   end)
 end
 
+-- Keep the column's PROPORTION across a screen resize (resizing the terminal, or moving the window
+-- to another monitor). Nvim rescales window heights proportionally but hands the entire width
+-- difference to the rightmost window, so the sidebar keeps its absolute column count: a 33% column on
+-- a wide monitor becomes a 66% column on a laptop screen. Remember the fraction instead and re-apply
+-- it. Note this deliberately does NOT change what a fresh open gets — close both terminals and the
+-- column comes back at M.width, as before.
+local fraction = M.width
+local screen_columns = vim.o.columns
+
+--- The sidebar column, but only when one of our terminals is actually in it. The geometric M.win() is
+--- fine for a keypress the user aimed, but an automatic resize must not grab a plain code split that
+--- happens to sit at column 0.
+---@return integer? win
+local function terminal_win()
+  local win = M.win()
+  if win and (win == M.shell_win() or win == M.claude_win()) then
+    return win
+  end
+end
+
+local group = vim.api.nvim_create_augroup("sidebar_width", { clear = true })
+
+-- Any width change records the new fraction — a toggle, the Option+[ / Option+] cycle, or a mouse
+-- drag on the separator. Changes that come FROM a screen resize are skipped: the fraction worth
+-- keeping is the one from before it, and 'columns' has already been updated by the time this fires.
+vim.api.nvim_create_autocmd("WinResized", {
+  group = group,
+  callback = function()
+    local win = vim.o.columns == screen_columns and terminal_win()
+    if win then
+      fraction = vim.api.nvim_win_get_width(win) / vim.o.columns
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("VimResized", {
+  group = group,
+  callback = function()
+    screen_columns = vim.o.columns
+    local win = terminal_win()
+    if win then
+      vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * fraction))
+    end
+  end,
+})
+
 --- Run a ClaudeCode command and settle the split into the column, ABOVE the shell when that's open.
 ---@param cmd string an Ex command, e.g. "ClaudeCode" or "ClaudeCodeFocus"
 ---@return fun()
