@@ -13,10 +13,17 @@ return {
     "navarasu/onedark.nvim",
     lazy = false,
     priority = 1000,
-    -- Stock onedark, no palette overrides. Code briefly used a pure white `fg` to match Ghostty's
-    -- foreground (14:1 vs onedark's 6.6:1) — tried and reverted, too stark for code. onedark's own
-    -- #abb2bf stays, so code text is deliberately softer than the terminal panes below.
-    opts = { style = "dark" },
+    opts = {
+      style = "dark",
+      -- Body text sits halfway between onedark's #abb2bf (6.6:1, washes out in Go, where most of
+      -- the screen is plain identifiers) and Ghostty's pure white (14:1, too hot once there's a
+      -- lot of it). This is the perceptual midpoint — interpolated in CIELAB, not hex, so it keeps
+      -- onedark's cool grey tint rather than drifting neutral. Nudge along that line if needed:
+      -- #c0c5cf (8.1:1) / #ccd0d8 (9.1:1) / #dde0e5 (10.6:1) / #eaebef (11.8:1).
+      -- Accents stay stock: onedark's blue carries 2.12x the chroma of Ghostty's and purple 2.52x,
+      -- which is the vividness that makes code readable here — WCAG contrast can't see it.
+      colors = { fg = "#d4d8df" },
+    },
     config = function(_, opts)
       require("onedark").setup(opts)
       require("onedark").load()
