@@ -7,7 +7,6 @@ docs/superpowers/
 
 # Mutable Ghostty theme state rewritten by `ghostty-theme` on every toggle.
 # Not user-portable — each machine boots into its own preferred state.
-src/.config/ghostty/theme.conf
 
 # Karabiner-generated daily backups of karabiner.json. Auto-regenerated, not
 # worth versioning.

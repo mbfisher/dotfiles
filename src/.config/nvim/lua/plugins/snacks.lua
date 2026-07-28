@@ -102,6 +102,27 @@ return {
     end,
     ---@type snacks.Config
     opts = {
+      styles = {
+        -- Make every snacks terminal (the <C-/> shell and the Claude Code split) use the same
+        -- colours as a bare Ghostty pane via TerminalNormal, defined in colorscheme.lua. Without
+        -- this they inherit SnacksNormal -> onedark NormalFloat (bg1, lighter than the terminal's
+        -- own background), which made Claude look washed out.
+        -- The whole winhighlight string replaces snacks' default, so the non-Normal mappings are
+        -- repeated verbatim from snacks' win defaults to keep winbar/border styling intact.
+        terminal = {
+          wo = {
+            winhighlight = table.concat({
+              "Normal:TerminalNormal",
+              "NormalNC:TerminalNormal",
+              "WinBar:SnacksWinBar",
+              "WinBarNC:SnacksWinBarNC",
+              "FloatTitle:SnacksTitle",
+              "FloatFooter:SnacksFooter",
+              "WinSeparator:SnacksWinSeparator",
+            }, ","),
+          },
+        },
+      },
       picker = {
         -- <c-f> in grep picker: toggle off live mode and append " file:" to input
         -- so you can immediately filter results by filename/path
