@@ -113,6 +113,18 @@ at the Claude prompt it just goes to Claude). `<C-;>` needs a Ghostty bind to su
 keybind = ctrl+semicolon=text:\x1b[59;5u
 ```
 
+## Related: the sidebar can't be the last window
+
+Closing the last code window while the sidebar was open used to be a dead end. The column filled the
+screen, and neither terminal could be hidden to make room, because nvim refuses to close the last
+window: claudecode's `cc_hide` pcalls `nvim_win_close` and treats the E444 failure as a no-op, and
+snacks' `close()` catches E444 by splitting and closing again, which just leaves the same terminal
+buffer on screen. Being stuck in terminal insert mode made it worse — there was nowhere to go.
+
+`config/autocmds.lua` now falls back to the LazyVim home screen (`Snacks.dashboard.open`) whenever no
+listed, named buffer is left, and — when only sidebar windows remain — first creates a window on the
+right to put it in. `util/sidebar.lua` exposes `is_sidebar_win()` and `restore_width()` for that.
+
 ## Recurrence notes
 
 - The trigger is claudecode.nvim's hand-rolled window recreate. If a future version stops doing that

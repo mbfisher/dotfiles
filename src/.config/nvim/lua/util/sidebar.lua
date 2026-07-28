@@ -165,14 +165,29 @@ end
 local fraction = M.width
 local screen_columns = vim.o.columns
 
---- The sidebar column, but only when one of our terminals is actually in it. The geometric M.win() is
---- fine for a keypress the user aimed, but an automatic resize must not grab a plain code split that
---- happens to sit at column 0.
+--- Is `win` one of the two sidebar terminals? Identity, not geometry: anything automatic must not
+--- mistake a plain code split that happens to sit at column 0 for the sidebar.
+---@param win integer
+---@return boolean
+function M.is_sidebar_win(win)
+  return win == M.shell_win() or win == M.claude_win()
+end
+
+--- The sidebar column, but only when one of our terminals is actually in it.
 ---@return integer? win
 local function terminal_win()
   local win = M.win()
-  if win and (win == M.shell_win() or win == M.claude_win()) then
+  if win and M.is_sidebar_win(win) then
     return win
+  end
+end
+
+--- Re-apply the remembered fraction to the column. Called after a screen resize, and by anything else
+--- that leaves the column at the wrong proportion (see config/autocmds.lua).
+function M.restore_width()
+  local win = terminal_win()
+  if win then
+    vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * fraction))
   end
 end
 
@@ -195,10 +210,7 @@ vim.api.nvim_create_autocmd("VimResized", {
   group = group,
   callback = function()
     screen_columns = vim.o.columns
-    local win = terminal_win()
-    if win then
-      vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * fraction))
-    end
+    M.restore_width()
   end,
 })
 
