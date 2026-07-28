@@ -105,7 +105,7 @@ related, not a fundamental problem with `new-tab` or the layout file.
 ## Related Issues
 
 - **Zellij bug #4673**: nested stacked panes produce invalid `session-layout.kdl` files that fail to parse on session
-  resurrection. Handled by the `za`/`zn` functions in `.zshrc` which detect attach failures and start fresh.
+  resurrection. Handled by the `za`/`zr` functions in `.zshrc` which detect attach failures and start fresh.
 - **`zellij list-sessions` ANSI codes**: output includes colour codes when piped, breaking `grep` matches. Use the
   `-n` flag to suppress formatting.
 - **`zellij run` TTY allocation**: `zellij run -- claude` hangs because `zellij run` doesn't allocate a proper TTY for

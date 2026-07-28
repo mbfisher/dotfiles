@@ -156,32 +156,53 @@ alias dc="docker-compose"
 alias goland="nohup /opt/homebrew/bin/goland . &> /dev/null &"
 alias tf="terraform"
 
-# Attach to or create a zellij session named after the current directory.
-# If attach fails (e.g. resurrection parse error zellij#4673),
+# Attach to an existing zellij session named after the current directory.
+# Attach-only: exits non-zero when there's no session, rather than creating
+# one — use zr/zn for that, so `za` never silently makes a session you didn't
+# expect. If attach fails (e.g. resurrection parse error zellij#4673),
 # kills the broken session and starts fresh with --layout repo.
 za() {
   local session_name="${PWD##*/}"
-  if zellij list-sessions -n 2>/dev/null | grep -q "^${session_name} "; then
-    echo "Found existing '${session_name}' session, trying to attach..."
-    zellij attach "$session_name"
-    if [[ $? -ne 0 ]]; then
-      echo "Attach failed, killing broken session '$session_name' and starting fresh..."
-      zellij kill-session "$session_name"
-      zellij delete-session "$session_name" 2>/dev/null
-      # -n not -l: --layout + --session adds tabs to an existing session
-      # instead of creating one (zellij 0.43+).
-      zellij --session "$session_name" --new-session-with-layout repo
-    fi
-  else
-    echo "No existing '${session_name} found, creating..."
+  if ! zellij list-sessions -n 2>/dev/null | grep -q "^${session_name} "; then
+    echo "No existing '${session_name}' session found" >&2
+    return 1
+  fi
+  echo "Found existing '${session_name}' session, trying to attach..."
+  zellij attach "$session_name"
+  if [[ $? -ne 0 ]]; then
+    echo "Attach failed, killing broken session '$session_name' and starting fresh..."
+    zellij kill-session "$session_name"
+    zellij delete-session "$session_name" 2>/dev/null
+    # -n not -l: --layout + --session adds tabs to an existing session
+    # instead of creating one (zellij 0.43+).
     zellij --session "$session_name" --new-session-with-layout repo
   fi
 }
 
-# Kill any existing session named after the current directory and start fresh.
-# Useful when you don't want to resurrect a stale or broken session.
+# Kill any existing session named after the current directory and start fresh
+# with the repo layout. Useful when you don't want to resurrect a stale or
+# broken session. (Was `zn` — renamed to `zr` for "repo layout" so `zn` can
+# mean a plain new session.)
+zr() {
+  local session_name="${PWD##*/}"
+  _zellij_kill_session "${session_name}"
+  echo "Creating session with repo layout..."
+  zellij --session "$session_name" --new-session-with-layout repo
+}
+
+# Same nuke-and-recreate as zr, but with no layout: just an empty session
+# with zellij's default single pane.
 zn() {
   local session_name="${PWD##*/}"
+  _zellij_kill_session "${session_name}"
+  echo "Creating session..."
+  zellij --session "$session_name"
+}
+
+# Shared by zr/zn: drop any existing session of this name so the following
+# `zellij --session` creates a fresh one instead of resurrecting.
+_zellij_kill_session() {
+  local session_name="$1"
   if zellij list-sessions -n 2>/dev/null | grep -q "^${session_name} "; then
     echo "Destroying existing '${session_name}' session..."
     zellij kill-session "$session_name"
@@ -189,11 +210,9 @@ zn() {
   else
     echo "No existing '${session_name}' session found"
   fi
-  echo "Creating session..."
-  zellij --session "$session_name" --new-session-with-layout repo
 }
 
-# tmux equivalents of za/zn: ta attaches (or creates), tn nukes and recreates.
+# tmux equivalents of za/zr: ta attaches (or creates), tn nukes and recreates.
 # The repo layout matches what the C-b Tab swap binding expects: window
 # `main` with claude on the left and nvim on the right, plus a hidden
 # `holder` window whose shell pane gets swapped into main.2 on demand.
