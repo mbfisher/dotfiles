@@ -118,7 +118,7 @@ return {
               "WinBarNC:SnacksWinBarNC",
               "FloatTitle:SnacksTitle",
               "FloatFooter:SnacksFooter",
-              "WinSeparator:SnacksWinSeparator",
+              "WinSeparator:TerminalWinSeparator",
             }, ","),
           },
         },
