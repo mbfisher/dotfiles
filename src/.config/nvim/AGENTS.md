@@ -229,6 +229,7 @@ Nvim-specific issues to be aware of:
 | Issue | Summary |
 |-------|---------|
 | [001-nvim-macos-provenance-crash](../../../issues/001-nvim-macos-provenance-crash.md) | macOS 26+ tags Homebrew binaries with `com.apple.provenance`, propagates to treesitter/blink `.so` files, SIGKILL on `dlopen`. Fix: strip provenance via Terminal.app. |
+| [005-claude-and-terminal-left-splits](../../../issues/005-claude-and-terminal-left-splits.md) | claudecode.nvim recreates its split by hand and drops the `w:snacks_win` fields snacks' stacking reads, so the shell terminal opened a third column. Fix: `lua/util/sidebar.lua` places both left-column terminals itself. |
 
 When an investigation resolves a non-trivial problem, save it to `issues/NNN-short-description.md` at the repo root.
 Include: symptoms, root cause, fix steps, and recurrence notes. If it's nvim-specific, add a row to the table above.

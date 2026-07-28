@@ -50,24 +50,15 @@ vim.keymap.set("n", "<leader>fY", function()
   vim.notify(p)
 end, { desc = "Yank absolute path" })
 
--- Toggle a persistent shell terminal in a LEFT VERTICAL split.
+-- Toggle a persistent shell terminal in the LEFT SIDEBAR COLUMN, sharing it with the
+-- Claude Code split (<C-;>): the shell takes the bottom half when Claude is open, the
+-- full column height when it isn't. Layout and persistence details live in util/sidebar.
 -- Overrides LazyVim's <C-/> (and <C-_>, what some terminals send for it), which opens
 -- a bottom horizontal split — never wanted here. LazyVim's floating terminals are
 -- untouched on <leader>ft / <leader>fT.
--- Persistence: Snacks keys terminals on cmd + cwd + env + count, so toggling with the
--- same args reuses the same shell instead of spawning a new one. cwd is pinned to the
--- GLOBAL cwd (getcwd(-1)) rather than LazyVim.root() so a buffer with a different
--- project root can't silently create a second terminal.
--- Note: snacks' "terminal" style sets stack = true, so this and the Claude Code split
--- (also position = "left") stack in the same left column rather than fighting over it.
-local function shell_terminal()
-  Snacks.terminal.toggle(nil, {
-    cwd = vim.fn.getcwd(-1),
-    win = { position = "left", width = 0.33 },
-  })
-end
-vim.keymap.set({ "n", "t" }, "<C-/>", shell_terminal, { desc = "Terminal (left split)" })
-vim.keymap.set({ "n", "t" }, "<C-_>", shell_terminal, { desc = "which_key_ignore" })
+local sidebar = require("util.sidebar")
+vim.keymap.set({ "n", "t" }, "<C-/>", sidebar.toggle_shell, { desc = "Terminal (left split)" })
+vim.keymap.set({ "n", "t" }, "<C-_>", sidebar.toggle_shell, { desc = "which_key_ignore" })
 
 -- Option+] / Option+[ cycle the left split (shell / Claude Code) through fixed widths:
 -- 33-66 (the default) -> 50-50 -> 66-33. Steps clamp at each end rather than wrapping, so
@@ -75,26 +66,13 @@ vim.keymap.set({ "n", "t" }, "<C-_>", shell_terminal, { desc = "which_key_ignore
 -- Took over from the zellij "Alt [" / "Alt ]" pane-resize binds — claude is an nvim window
 -- now, not a zellij pane. Ghostty sends these as CSI u text (see ghostty/config) so they reach
 -- nvim through zellij; mapped in terminal mode too, so they work while typing at the Claude prompt.
+-- Both halves of the column share its width, so resizing either one resizes the column.
 local sidebar_steps = { 0.33, 0.5, 0.66 }
-
--- The left split is whichever non-floating window sits hard against column 0 while something
--- else shares the row. Deliberately not keyed off snacks' window vars: claudecode's provider
--- recreates its split window by hand (its cursor-drift workaround), so those vars aren't
--- dependable. This also means the cycle works from either side of the split.
-local function sidebar_win()
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local floating = vim.api.nvim_win_get_config(win).relative ~= ""
-    local at_left_edge = vim.api.nvim_win_get_position(win)[2] == 0
-    if not floating and at_left_edge and vim.api.nvim_win_get_width(win) < vim.o.columns then
-      return win
-    end
-  end
-end
 
 ---@param widen boolean true to widen the left split, false to narrow it
 local function cycle_sidebar_width(widen)
   return function()
-    local win = sidebar_win()
+    local win = sidebar.win()
     if not win then
       return
     end
