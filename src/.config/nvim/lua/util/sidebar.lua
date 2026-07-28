@@ -14,7 +14,8 @@
 --- once, snacks stopped recognising it as stackable, <C-/> opened a THIRD column, and the toggles
 --- started closing the wrong window. Stacking is therefore switched off on both terminals
 --- (win.stack = false here, snacks_win_opts.stack = false in plugins/claudecode.lua) and the
---- placement is done with win_splitmove() instead.
+--- placement is done with win_splitmove() instead — see without_equalize() below for the other half
+--- of that, snacks' stacking-related resize.
 local M = {}
 
 --- Default width of the column as a fraction of the screen. Option+[ / Option+] cycle it live
@@ -103,18 +104,50 @@ local function place(win, anchor, above, width)
         vim.cmd.startinsert()
       end
     end
-    vim.api.nvim_win_set_height(win, math.floor(vim.o.lines / 2))
+    -- Half of the rows the two windows actually have between them, NOT half of vim.o.lines:
+    -- asking for more rows than the column holds (winbars and the statusline take some) makes
+    -- nvim shrink the topframe and inflate 'cmdheight' instead, leaving a dead band at the bottom
+    -- of the screen that outlives both terminals.
+    local rows = vim.api.nvim_win_get_height(win) + vim.api.nvim_win_get_height(anchor)
+    vim.api.nvim_win_set_height(win, math.floor(rows / 2))
   end
   vim.api.nvim_win_set_width(win, width)
+end
+
+--- Run `show`, then `settle` on the next tick, with snacks' equalize() suppressed in between.
+---
+--- Snacks.win:open_win() schedules self:equalize(), which resizes every window whose w:snacks_win
+--- records the same relative + position — for us, both "left" terminals. It fires while they are
+--- still side by side, each its own full-height column, so it shrinks a full-height window; nvim
+--- can only absorb that by shrinking the topframe and inflating 'cmdheight', which leaves a dead
+--- band at the bottom of the screen that survives closing both terminals. equalize() exists to
+--- balance snacks' own stacking, which is switched off here, so it has nothing to contribute.
+--- Patched on the class rather than the instance because claudecode.nvim owns its terminal object
+--- and doesn't expose it; the patch only stands for the one tick that the scheduled call lands in.
+---@param show fun()
+---@param settle fun()
+local function without_equalize(show, settle)
+  local win = require("snacks.win")
+  local equalize = win.equalize
+  win.equalize = function() end
+  local ok, err = pcall(show)
+  vim.schedule(function()
+    win.equalize = equalize
+    if ok then
+      settle()
+    else
+      error(err)
+    end
+  end)
 end
 
 --- Toggle the shell terminal, stacked BELOW Claude Code when that's open.
 function M.toggle_shell()
   local width = M.column_width()
-  local term = Snacks.terminal.toggle(nil, shell_opts())
-  -- Deferred so it lands after snacks' own scheduled equalize(), which would otherwise undo the
-  -- sizing.
-  vim.schedule(function()
+  local term
+  without_equalize(function()
+    term = Snacks.terminal.toggle(nil, shell_opts())
+  end, function()
     -- Nothing to do when that hid the terminal: nvim hands the space to whatever shares the column.
     if not (term and term:win_valid()) then
       return
@@ -129,8 +162,9 @@ end
 function M.claude(cmd)
   return function()
     local width = M.column_width()
-    vim.cmd(cmd)
-    vim.schedule(function()
+    without_equalize(function()
+      vim.cmd(cmd)
+    end, function()
       local claude = M.claude_win()
       if not claude then
         return

@@ -51,6 +51,40 @@ global one — `<C-/>` inside Claude meant "hide *this* window". Fixed by disabl
 skips any key whose spec is falsy. The global keymaps then own both keys from anywhere: `<C-/>` is
 always the shell, `<C-;>` always Claude.
 
+### Third cause: snacks' `equalize()` inflates `cmdheight`
+
+Once both terminals could be open at once, stacking them left a **dead band at the bottom of the
+screen** — nvim's content stopped about a third of the way down, statusline included, and it stayed
+that way after closing both terminals.
+
+That band is the command line. `Snacks.win:open_win()` ends with
+`vim.schedule(function() self:equalize() end)`, and `equalize()` resizes the height of every window
+whose `w:snacks_win` records the same `relative` + `position` — i.e. both "left" terminals. It fires
+while they are still **side by side**, each a full-height column of its own, so it shrinks a
+full-height window. nvim can't take those rows from a sibling (there isn't one vertically), so it
+shrinks the topframe and grows `'cmdheight'` instead, and that sticks:
+
+```
+C-; claude alone      cmdheight=1   claude 66x58 | code 133x58
+C-/ shell -> stacked  cmdheight=26  claude 66x2  | shell 66x30 | code 133x33
+hide shell            cmdheight=26  <- outlives the terminals
+```
+
+Two fixes in `util/sidebar.lua`:
+
+- `without_equalize()` suppresses `Snacks.win.equalize` for the single tick the scheduled call lands
+  in. It's patched on the class, not the instance, because claudecode.nvim owns its terminal object
+  and only exposes it through a `_get_terminal_for_test` helper. `equalize()` exists to balance
+  snacks' own stacking, which is off here, so nothing is lost.
+- `place()` sizes the window to half of the rows the two windows actually have between them, rather
+  than half of `vim.o.lines`. Asking for more rows than the column holds (winbars and the statusline
+  take some) triggers the same topframe shrink.
+
+**This class of bug is invisible to `nvim --headless`** — with no UI attached there is no real grid,
+so the topframe never shrinks and `cmdheight` stays 1. It only reproduces with a UI on a pty of known
+size (`scratchpad/pty_run.py` in the session that fixed this drove nvim on a 200x60 pty and logged
+`vim.o.lines` / `cmdheight` / window rects after each toggle). Test geometry changes that way.
+
 ## Red herrings
 
 - It looks like a `position`/`split_side` mismatch. Both were already `"left"`; the position was
