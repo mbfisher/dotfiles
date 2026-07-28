@@ -34,6 +34,23 @@ its window as stackable and opened a whole new column. The wrong-window closes c
 place: `Snacks.win:hide()` closes `self.win`, and the two terminals' recorded windows no longer
 matched what was on screen.
 
+### Second cause: LazyVim's buffer-local `<C-/>`
+
+Even with the placement fixed, `<C-/>` pressed while focused in the Claude Code split still *closed
+Claude* instead of opening the shell below it. LazyVim adds two **buffer-local** terminal-mode keys to
+every snacks terminal window (`lazyvim/plugins/util.lua`, in `opts.terminal.win.keys`):
+
+```lua
+hide_slash      = { "<C-/>", "hide", desc = "Hide Terminal", mode = "t" },
+hide_underscore = { "<c-_>", "hide", desc = "which_key_ignore", mode = "t" },
+```
+
+Claude Code is a snacks terminal, so it got them too, and a buffer-local mapping always beats the
+global one — `<C-/>` inside Claude meant "hide *this* window". Fixed by disabling both in
+`plugins/snacks.lua` (`terminal.win.keys.hide_slash = false`, same for `hide_underscore`); snacks
+skips any key whose spec is falsy. The global keymaps then own both keys from anywhere: `<C-/>` is
+always the shell, `<C-;>` always Claude.
+
 ## Red herrings
 
 - It looks like a `position`/`split_side` mismatch. Both were already `"left"`; the position was

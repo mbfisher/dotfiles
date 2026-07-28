@@ -102,6 +102,19 @@ return {
     end,
     ---@type snacks.Config
     opts = {
+      terminal = {
+        win = {
+          keys = {
+            -- LazyVim maps <C-/> and <C-_> BUFFER-LOCALLY in every snacks terminal to hide THAT
+            -- terminal (hide_slash / hide_underscore, lazyvim/plugins/util.lua). Buffer-local wins
+            -- over the global map, so pressing <C-/> inside the Claude Code split hid Claude
+            -- instead of toggling the shell terminal. Dropping them leaves the global keymaps in
+            -- charge from anywhere: <C-/> always means the shell, <C-;> always means Claude.
+            hide_slash = false,
+            hide_underscore = false,
+          },
+        },
+      },
       styles = {
         -- Put every snacks terminal (the <C-/> shell and the Claude Code split) on the terminal
         -- colour scheme via TerminalNormal, which colorscheme.lua defines from Ghostty's own
