@@ -1,0 +1,29 @@
+// Single-pane nvim session, for when I just want an editor and not the full repo workflow
+// (claude + nvim + shell). Started by `zv` in .zshrc.
+//
+// The point of `pane command="nvim"` rather than a plain pane running nvim from the shell:
+// a command pane doesn't die when the command exits. Quitting nvim leaves the pane open with
+// "[ EXIT CODE: 0 ] <ENTER> re-run, <ESC> drop to shell, <Ctrl-c> exit" on the bottom border,
+// so ENTER puts me straight back in the editor instead of dumping me into a bare shell (ESC is
+// still there if a shell is what I wanted). close_on_exit is false by default; it's set
+// explicitly here because that behaviour is the whole reason this layout exists.
+//
+// Chrome matches repo.kdl (tab-bar + status-bar via default_tab_template) so new tabs in this
+// session look the same as everywhere else.
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=1 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab {
+        pane command="nvim" focus=true {
+            close_on_exit false
+        }
+    }
+}

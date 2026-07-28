@@ -190,6 +190,16 @@ zr() {
   zellij --session "$session_name" --new-session-with-layout repo
 }
 
+# Same nuke-and-recreate as zr, but with the nvim layout: a single pane
+# running nvim, which offers a re-run prompt on quit instead of dropping to
+# a shell. See src/.config/zellij/layouts/nvim.kdl.
+zv() {
+  local session_name="${PWD##*/}"
+  _zellij_kill_session "${session_name}"
+  echo "Creating session with nvim layout..."
+  zellij --session "$session_name" --new-session-with-layout nvim
+}
+
 # Same nuke-and-recreate as zr, but with no layout: just an empty session
 # with zellij's default single pane.
 zn() {
