@@ -37,10 +37,13 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 
-# No theme set on purpose: Ghostty's built-in defaults (bg #282c34, fg #ffffff) ARE the theme.
-# The old `config-file = ?theme.conf` include and the `ghostty-theme` toggle script are gone —
-# the light/dark switch went unused. nvim's TerminalNormal (see nvim plugins/colorscheme.lua)
-# hardcodes these two colours to match, so change both together.
+# NO COLOURS ARE SET HERE ON PURPOSE. Ghostty's built-in defaults are one of the two colour schemes
+# these dotfiles use — a One Dark background (#282c34) and pure white foreground over a Tomorrow
+# Night / Tomorrow Night Bright ANSI palette. See docs/colours.md.
+# nvim mirrors those values so terminal buffers inside it match a bare pane, so adding a `theme`,
+# `background`, `foreground` or `palette` line here means updating nvim's plugins/colorscheme.lua too.
+# (The old `config-file = ?theme.conf` include and `ghostty-theme` toggle script are gone with the
+# light/dark switch, which went unused.)
 
 # Do NOT re-add a shift+enter=text:\n bind. A literal \n is byte 0x0a, which in vim IS <C-j> —
 # and LazyVim maps <C-j> in terminal mode for window navigation, so it moved focus instead of

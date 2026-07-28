@@ -169,6 +169,13 @@ or return.
 - Snacks picker/explorer configured to show hidden files by default
 - Toggle with `<Alt-h>` in picker
 
+### Colours
+- Two schemes: Ghostty's built-in default for all terminals (including `:terminal` buffers and Claude
+  Code), onedark + a lighter `fg` for code. Both are defined in `lua/plugins/colorscheme.lua` as
+  `terminal_scheme` / `editor_scheme` — the only place hex values belong
+- `terminal_scheme` mirrors Ghostty, whose config sets no colours deliberately. Keep them in sync
+- Full rationale and measurements: `../../../docs/colours.md`. Read it before changing a colour
+
 ## Debugging Problems
 
 ### "Changes didn't work after restart"

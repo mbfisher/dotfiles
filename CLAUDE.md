@@ -28,6 +28,13 @@ Each issue file follows the format: symptoms, root cause, red herrings, fix/work
 resolving a tricky problem, save it as `issues/NNN-short-description.md`. Check existing issues before debugging a
 problem that may already be documented.
 
+## Colours
+
+Two colour schemes are in use — Ghostty's built-in default for every terminal (including terminal buffers inside
+nvim, and Claude Code), and onedark with a lighter foreground for code. `docs/colours.md` documents both, every
+file that sets colours, and the reasoning. Read it before changing any colour: the values are cross-referenced
+between the Ghostty and nvim configs, and Ghostty setting no colours at all is deliberate.
+
 ## Peripherals
 
 I use a Keychron K3 Max keyboard and Keychron M6 mouse. They need some custom configuration for my setup. See src/.config/karabiner/README.md
