@@ -23,9 +23,16 @@ return {
       -- The left window owns a vertical separator column, and our terminals are always on the
       -- left, so this only ever colours the terminal-to-code edge (plus shell-to-Claude when
       -- both are stacked). Code-to-code splits keep onedark's WinSeparator.
+      -- Background is read from the active scheme's Normal rather than hardcoded, so switching
+      -- colorschemes live (`:colorscheme X`, or <leader>uC) keeps the terminal panes in step
+      -- instead of stranding them on onedark's background. Only the foreground is pinned: Claude
+      -- draws its body text in the terminal's default fg, and white is what it gets in a bare
+      -- Ghostty pane (Ghostty's default foreground).
       local function set_terminal_hl()
-        vim.api.nvim_set_hl(0, "TerminalNormal", { fg = "#ffffff", bg = "#282c34" })
-        vim.api.nvim_set_hl(0, "TerminalWinSeparator", { fg = "#ffffff", bg = "#282c34" })
+        local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+        local bg = normal.bg and ("#%06x"):format(normal.bg) or "#282c34"
+        vim.api.nvim_set_hl(0, "TerminalNormal", { fg = "#ffffff", bg = bg })
+        vim.api.nvim_set_hl(0, "TerminalWinSeparator", { fg = "#ffffff", bg = bg })
       end
       set_terminal_hl()
       vim.api.nvim_create_autocmd("ColorScheme", { callback = set_terminal_hl })
