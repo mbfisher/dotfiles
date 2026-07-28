@@ -4,7 +4,7 @@
 --
 -- The goal of the colour tweaks below is that nvim and a bare Ghostty pane are indistinguishable
 -- for the same content. Three separate palettes are in play, which is why this needs three fixes:
---   1. onedark's syntax palette      -> code. Kept as-is; only `fg` is raised (see below).
+--   1. onedark's syntax palette      -> code. Left completely stock (see below).
 --   2. nvim's g:terminal_color_*     -> ANSI colours inside :terminal buffers.
 --   3. Claude's own hardcoded RGB    -> not themeable at all; it emits truecolor, so it already
 --                                       looks the same inside nvim and out. Nothing to do.
@@ -13,15 +13,10 @@ return {
     "navarasu/onedark.nvim",
     lazy = false,
     priority = 1000,
-    opts = {
-      style = "dark",
-      -- Raise body text to Ghostty's foreground. onedark's #abb2bf is 6.6:1 against the
-      -- background where Ghostty's white is 14:1, and that one value — not the accent hues, which
-      -- measure within 0.1 of each other — is the whole reason code looked washed out next to a
-      -- terminal. Accents stay onedark's: Ghostty's ANSI palette is Tomorrow Night, 33% less
-      -- saturated, which would flatten code rather than sharpen it.
-      colors = { fg = "#ffffff" },
-    },
+    -- Stock onedark, no palette overrides. Code briefly used a pure white `fg` to match Ghostty's
+    -- foreground (14:1 vs onedark's 6.6:1) — tried and reverted, too stark for code. onedark's own
+    -- #abb2bf stays, so code text is deliberately softer than the terminal panes below.
+    opts = { style = "dark" },
     config = function(_, opts)
       require("onedark").setup(opts)
       require("onedark").load()
@@ -40,9 +35,11 @@ return {
       -- Terminal splits (shell + Claude Code) get their own Normal so they match a bare Ghostty
       -- pane: snacks otherwise maps them to SnacksNormal -> onedark's NormalFloat (bg1 #31353f,
       -- lighter than the surrounding background). Background follows the active scheme's Normal so
-      -- switching colorschemes keeps them in step; foreground is pinned to Ghostty's white, kept
-      -- separate from onedark's `fg` above so code brightness can be tuned without touching the
-      -- terminals. TerminalWinSeparator gives the terminal/code edge a visible rule — onedark's
+      -- switching colorschemes keeps them in step; foreground is pinned to Ghostty's white, which
+      -- is what a terminal session gets outside nvim — deliberately independent of onedark's `fg`,
+      -- so terminals match Ghostty while code stays stock onedark. Note a plain `:terminal` (not
+      -- opened via snacks) misses this and falls back to onedark's dimmer Normal.
+      -- TerminalWinSeparator gives the terminal/code edge a visible rule — onedark's
       -- WinSeparator is #3b3f4c, about 1.2:1. The left window owns a vertical separator column and
       -- the terminals are always on the left, so code-to-code splits keep onedark's version.
       -- Both are re-applied on ColorScheme, which clears custom groups and re-runs onedark's own
