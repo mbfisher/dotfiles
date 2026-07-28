@@ -121,9 +121,31 @@ window: claudecode's `cc_hide` pcalls `nvim_win_close` and treats the E444 failu
 snacks' `close()` catches E444 by splitting and closing again, which just leaves the same terminal
 buffer on screen. Being stuck in terminal insert mode made it worse — there was nowhere to go.
 
-`config/autocmds.lua` now falls back to the LazyVim home screen (`Snacks.dashboard.open`) whenever no
-listed, named buffer is left, and — when only sidebar windows remain — first creates a window on the
-right to put it in. `util/sidebar.lua` exposes `is_sidebar_win()` and `restore_width()` for that.
+`config/autocmds.lua` now handles both halves of that. When only sidebar windows remain it creates a
+window on the right; what goes in it depends on whether any work is left open — the most recently used
+listed file if there is one, the LazyVim home screen (`Snacks.dashboard.open`) if there isn't. The home
+screen is also what replaces the last deleted buffer in an existing code window.
+`util/sidebar.lua` exposes `is_sidebar_win()` and `restore_width()` for the sidebar-specific parts.
+
+Two mistakes worth not repeating, both from the first attempt:
+
+- It opened the home screen whenever the code *window* was gone, even with files still open. The
+  dashboard buffer is `buflisted = false`, so bufferline could not locate a current position and
+  `<S-h>` / `<S-l>` silently stopped cycling. Show a file when there is one.
+- It made the window with `:vnew`, whose empty buffer **is** listed, so it lingered in the bufferline
+  as a stray `[No Name]` the moment the dashboard replaced it in the window. Use `:vsplit` and set the
+  buffer, and when the home screen lands in a window already holding a throwaway empty buffer (what
+  nvim leaves after the last file is deleted), pass that buffer to `Snacks.dashboard.open` as its own
+  so it gets taken over rather than orphaned.
+
+## Keeping the buffer tabs off the sidebar
+
+bufferline's tabline is inherently full width, so the buffer tabs ran across the top of the sidebar as
+well as the code window. `plugins/bufferline.lua` adds an `offsets` entry for `filetype =
+"snacks_terminal"`, which reserves the left portion of the tabline and paints it in that window's own
+background — the same mechanism LazyVim uses for the snacks explorer (`snacks_layout_box`). One entry
+covers all three layouts, because bufferline reads the width from the topmost window of a split column
+(`is_valid_layout` handles the `{'col', {'leaf'}, {'leaf'}}` case explicitly).
 
 ## Recurrence notes
 

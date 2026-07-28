@@ -15,13 +15,30 @@
 -- and re-shows the same buffer). Recreating the window also drops you out of terminal insert mode.
 local sidebar = require("util.sidebar")
 
---- Is any real file still open? Terminals and the dashboard are unlisted scratch buffers, and a fresh
---- `:enew` buffer is listed but unnamed, so "listed and named" is what counts as work in progress.
----@return boolean
-local function has_open_file()
-  return vim.iter(vim.api.nvim_list_bufs()):any(function(buf)
-    return vim.bo[buf].buflisted and vim.api.nvim_buf_get_name(buf) ~= ""
-  end)
+--- The listed, named buffer used most recently, or nil when no real file is open at all. Terminals and
+--- the dashboard are unlisted scratch buffers, and a fresh `:enew` buffer is listed but unnamed, so
+--- "listed and named" is what counts as work in progress.
+---@param skip integer? buffer to ignore — the one whose window just closed, since putting that back is
+---       never what closing it meant
+---@return integer?
+local function last_used_file(skip)
+  local best
+  for _, info in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+    if info.name ~= "" and info.bufnr ~= skip and (not best or info.lastused > best.lastused) then
+      best = info
+    end
+  end
+  return best and best.bufnr
+end
+
+--- Show the home screen in `win`, taking over an empty throwaway buffer when that's what the window
+--- holds (what nvim leaves behind after the last file is deleted). Otherwise that buffer would linger
+--- in the bufferline as a stray [No Name] once the dashboard replaced it in the window.
+---@param win integer
+local function open_home_screen(win)
+  local buf = vim.api.nvim_win_get_buf(win)
+  local throwaway = vim.bo[buf].buftype == "" and not vim.bo[buf].modified and vim.fn.bufname(buf) == ""
+  Snacks.dashboard.open({ win = win, buf = throwaway and buf or nil })
 end
 
 local home_group = vim.api.nvim_create_augroup("home_screen", { clear = true })
@@ -35,7 +52,8 @@ vim.api.nvim_create_autocmd("ExitPre", {
   end,
 })
 
-local function show_home_screen()
+---@param closed_buf integer? buffer that was showing in the window that just closed
+local function fill_empty_screen(closed_buf)
   if exiting or not package.loaded["snacks"] then
     return
   end
@@ -51,30 +69,46 @@ local function show_home_screen()
       end
     end
   end
+  local file = last_used_file(closed_buf)
 
   if code_win then
     -- A code window survives, so only step in once the last file is gone. Bailing out when it already
-    -- holds the dashboard also stops the buffer wipe below from re-triggering this.
-    if has_open_file() or vim.bo[vim.api.nvim_win_get_buf(code_win)].filetype == "snacks_dashboard" then
+    -- holds the dashboard also stops the buffer takeover from re-triggering this.
+    if file or vim.bo[vim.api.nvim_win_get_buf(code_win)].filetype == "snacks_dashboard" then
       return
     end
-  elseif sidebar_wins > 0 then
-    -- Nothing but the sidebar left: make room on the right, focused, and hand the column its width back.
-    vim.cmd("botright vnew")
-    code_win = vim.api.nvim_get_current_win()
-    sidebar.restore_width()
-  else
+    open_home_screen(code_win)
     return
   end
 
-  Snacks.dashboard.open({ win = code_win })
+  if sidebar_wins == 0 then
+    return
+  end
+  -- Nothing but the sidebar left. Make room on the right, focused, and hand the column its width back.
+  -- `vsplit` rather than `vnew`: vnew's empty buffer is listed, so it lingers in the bufferline as a
+  -- stray [No Name] as soon as something replaces it in the window.
+  vim.cmd("botright vsplit")
+  code_win = vim.api.nvim_get_current_win()
+  sidebar.restore_width()
+  -- Files still open (the window was closed, not the buffers) means the home screen is the wrong
+  -- answer: show the most recent one, so <S-h> / <S-l> can cycle from a real position again.
+  if file then
+    vim.api.nvim_win_set_buf(code_win, file)
+  else
+    open_home_screen(code_win)
+  end
 end
 
 vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout", "WinClosed" }, {
   group = home_group,
-  -- Scheduled because these all fire while the buffer/window is still there to be counted.
-  callback = function()
-    vim.schedule(show_home_screen)
+  callback = function(args)
+    -- The window is still in the layout during WinClosed, so read its buffer now; the check itself is
+    -- scheduled because these events all fire while the buffer/window is still there to be counted.
+    local win = args.event == "WinClosed" and tonumber(args.match)
+    local closed_buf = win and vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) or nil
+    vim.schedule(function()
+      fill_empty_screen(closed_buf)
+    end)
   end,
 })
 
