@@ -1,9 +1,11 @@
 #!/bin/bash
 input=$(cat)
 
-# Debug: write input to file for inspection
-echo "$input" > ~/.claude/statusline-debug.json
-
+# The payload used to be dumped to ~/.claude/statusline-debug.json on every
+# render. Dropped: it was only ever needed to discover the schema, which the
+# reference below now records, and it meant a file write on each status update.
+# Bring it back with `tee` temporarily if the schema changes.
+#
 # Example input JSON structure:
 # {
 #   "session_id": "cc5895b5-17b0-465c-805b-59d447b3c5aa",
