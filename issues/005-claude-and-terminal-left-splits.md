@@ -85,6 +85,34 @@ so the topframe never shrinks and `cmdheight` stays 1. It only reproduces with a
 size (`scratchpad/pty_run.py` in the session that fixed this drove nvim on a 200x60 pty and logged
 `vim.o.lines` / `cmdheight` / window rects after each toggle). Test geometry changes that way.
 
+### Fourth cause: any other left-hand split, e.g. the `<leader>e` explorer
+
+Opening the snacks explorer next to the sidebar brought the dead band back **and** put the explorer to
+the left of the terminals. Both because the explorer's layout root box is itself a `Snacks.win` split
+created with `relative = "editor"` and `position = "left"` (`snacks/layout.lua`, `box_wins`):
+
+- It matches `equalize()`'s `relative` + `position` filter against our terminals, so opening it
+  "equalized" the heights of windows sitting side by side — the `cmdheight` inflation again, this time
+  from a window we don't control and can't wrap in `without_equalize()`.
+- It opens with the same `vertical topleft`, so whichever opened last takes column 0.
+
+Fixes in `util/sidebar.lua`:
+
+- `deregister()` re-stamps `w:snacks_win` on our windows with `position`/`relative` of `"sidebar"` after
+  every placement, so no other snacks window's `equalize()` can ever match them. `without_equalize()`
+  is still needed for our own toggles, because snacks schedules `equalize()` during the show, before
+  `place()` gets to re-stamp. Keep the `id` field — `Snacks.win.zindex()` reads it.
+- `ensure_leftmost()` moves the column back to column 0 when something else takes it, on `WinNew` and
+  after each toggle's own placement (`WinNew` fires *before* the scheduled placement, when there is
+  nothing to fix yet).
+
+**`win_splitmove` into the explorer's box aborts with E855** ("Autocommands caused command to abort"),
+raised by the layout's own autocmds — and an error thrown inside a `vim.schedule` callback leaves nvim
+on a hit-enter prompt that you can't type at, i.e. a hung editor. `wincmd H` (make this the leftmost
+full-height column) works, followed by a normal `win_splitmove` of the other terminal onto it, whose
+target is our own window rather than the box. Everything in `ensure_leftmost()` is `pcall`'d so a
+reshuffle that can't be done leaves the wrong window order rather than a wedged editor.
+
 ## Red herrings
 
 - It looks like a `position`/`split_side` mismatch. Both were already `"left"`; the position was

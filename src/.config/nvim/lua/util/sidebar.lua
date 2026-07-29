@@ -1,6 +1,8 @@
 --- The left SIDEBAR COLUMN: a vertical split at column 0 shared by two terminals — Claude Code on
 --- top (<C-;>) and the shell on the bottom (<C-/>). Each toggles independently; whichever is left
---- alone takes the full column height, and hiding both hands the width back to the code window.
+--- alone takes the full column height, and hiding both hands the width back to the code window. The
+--- column also stays hard against the left edge when another left-hand split (the <leader>e explorer)
+--- opens, so the order is always terminals | explorer | code.
 ---
 --- Both toggles live in this module rather than in config/keymaps.lua because claudecode.nvim's
 --- keymap has to be declared in its own lazy `keys` spec (so the plugin loads on first press), and
@@ -14,8 +16,8 @@
 --- once, snacks stopped recognising it as stackable, <C-/> opened a THIRD column, and the toggles
 --- started closing the wrong window. Stacking is therefore switched off on both terminals
 --- (win.stack = false here, snacks_win_opts.stack = false in plugins/claudecode.lua) and the
---- placement is done with win_splitmove() instead — see without_equalize() below for the other half
---- of that, snacks' stacking-related resize.
+--- placement is done here instead — see deregister() and without_equalize() for the other half of
+--- that, snacks' stacking-related resize.
 local M = {}
 
 --- Default width of the column as a fraction of the screen. Option+[ / Option+] cycle it live
@@ -85,6 +87,41 @@ function M.claude_win()
   end
 end
 
+--- Is `win` one of the two sidebar terminals? Identity, not geometry: anything automatic must not
+--- mistake a plain code split that happens to sit at column 0 for the sidebar.
+---@param win integer
+---@return boolean
+function M.is_sidebar_win(win)
+  return win == M.shell_win() or win == M.claude_win()
+end
+
+--- Move `win` into a split of `target`, keeping terminal insert mode: win_splitmove keeps the window
+--- and its job alive but leaves insert mode behind.
+---@param win integer
+---@param target integer
+---@param opts { vertical: boolean, rightbelow: boolean }
+local function move(win, target, opts)
+  local insert = vim.fn.mode() == "t"
+  vim.fn.win_splitmove(win, target, opts)
+  if insert and vim.api.nvim_get_current_win() == win then
+    vim.cmd.startinsert()
+  end
+end
+
+--- Take our windows out of snacks' window bookkeeping, by stamping a position no other snacks window
+--- uses. equalize() resizes every window whose w:snacks_win records the same relative + position, and
+--- ANY other left-hand snacks split records `editor` + `left` too — notably the <leader>e explorer's
+--- layout root box. It would then "equalize" the heights of windows that sit side by side, shrinking a
+--- full-height one, which nvim answers by inflating 'cmdheight' into a dead band at the bottom of the
+--- screen. Snacks re-stamps the var on every show (and claudecode re-stamps it by hand), so this has to
+--- be re-applied every time we place a window. Keeps the id, which Snacks.win.zindex() reads.
+---@param win integer
+local function deregister(win)
+  local var = vim.w[win].snacks_win or {}
+  var.position, var.relative, var.stack = "sidebar", "sidebar", false
+  vim.w[win].snacks_win = var
+end
+
 --- Settle a just-shown terminal into the column: half height above/below the other one if it's
 --- open, full height otherwise, at the remembered column width either way.
 ---@param win integer the window that was just shown
@@ -92,17 +129,13 @@ end
 ---@param above boolean true to put `win` above `anchor`
 ---@param width integer column width in cells
 local function place(win, anchor, above, width)
+  deregister(win)
   if anchor and anchor ~= win then
+    deregister(anchor)
     -- Equal starting columns mean they already share the column, so there's nothing to move —
     -- only sizes to fix up.
     if vim.api.nvim_win_get_position(win)[2] ~= vim.api.nvim_win_get_position(anchor)[2] then
-      -- win_splitmove keeps the window and its terminal job alive, but leaves terminal insert
-      -- mode, so restore it when that's where we were.
-      local insert = vim.fn.mode() == "t"
-      vim.fn.win_splitmove(win, anchor, { vertical = false, rightbelow = not above })
-      if insert and vim.api.nvim_get_current_win() == win then
-        vim.cmd.startinsert()
-      end
+      move(win, anchor, { vertical = false, rightbelow = not above })
     end
     -- Half of the rows the two windows actually have between them, NOT half of vim.o.lines:
     -- asking for more rows than the column holds (winbars and the statusline take some) makes
@@ -114,16 +147,119 @@ local function place(win, anchor, above, width)
   vim.api.nvim_win_set_width(win, width)
 end
 
+-- Keep the column's PROPORTION across a screen resize (resizing the terminal, or moving the window
+-- to another monitor). Nvim rescales window heights proportionally but hands the entire width
+-- difference to the rightmost window, so the sidebar keeps its absolute column count: a 33% column on
+-- a wide monitor becomes a 66% column on a laptop screen. Remember the fraction instead and re-apply
+-- it. Note this deliberately does NOT change what a fresh open gets — close both terminals and the
+-- column comes back at M.width, as before.
+local fraction = M.width
+local screen_columns = vim.o.columns
+
+--- The sidebar column, but only when one of our terminals is actually in it.
+---@return integer? win
+local function terminal_win()
+  local win = M.win()
+  if win and M.is_sidebar_win(win) then
+    return win
+  end
+end
+
+--- Re-apply the remembered fraction to the column. Called after a screen resize, and by anything else
+--- that leaves the column at the wrong proportion (see config/autocmds.lua).
+function M.restore_width()
+  local win = terminal_win()
+  if win then
+    vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * fraction))
+  end
+end
+
+--- Keep the column hard against the left edge. Any other left-hand split — the <leader>e explorer, say
+--- — also opens with `vertical topleft`, so whichever opened last takes column 0 and the explorer ends
+--- up LEFT of the terminals. Wanted order is terminals | explorer | code, so move ours back.
+local function ensure_leftmost()
+  local claude, shell = M.claude_win(), M.shell_win()
+  local top = claude or shell
+  if not top then
+    return
+  end
+  -- Only one column can start at column 0, so the first window found there identifies it.
+  local leftmost
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_get_config(win).relative == "" and vim.api.nvim_win_get_position(win)[2] == 0 then
+      leftmost = win
+      break
+    end
+  end
+  if not leftmost or M.is_sidebar_win(leftmost) then
+    return -- already ours
+  end
+  -- The intruder has taken its share out of the column, so re-apply the remembered fraction.
+  local width = math.floor(vim.o.columns * fraction)
+  -- `wincmd H` (make this the leftmost full-height column) rather than win_splitmove: moving a window
+  -- into a split of the explorer's layout box aborts with E855, raised by the layout's own autocmds —
+  -- and an error thrown inside a scheduled callback leaves nvim sitting on a hit-enter prompt with no
+  -- way to type at it. Everything here is pcall'd for the same reason: a reshuffle that can't be done
+  -- should leave the windows in the wrong order, never wedge the editor.
+  local insert = vim.fn.mode() == "t"
+  if not pcall(vim.api.nvim_win_call, top, function()
+    vim.cmd("wincmd H")
+  end) then
+    return
+  end
+  if claude and shell then
+    pcall(place, shell, claude, false, width) -- wincmd H moved only the top one; re-stack the other
+  else
+    deregister(top)
+    pcall(vim.api.nvim_win_set_width, top, width)
+  end
+  if insert and vim.api.nvim_get_current_win() == top then
+    vim.cmd.startinsert()
+  end
+end
+
+local group = vim.api.nvim_create_augroup("sidebar_width", { clear = true })
+
+-- Any width change records the new fraction — a toggle, the Option+[ / Option+] cycle, or a mouse
+-- drag on the separator. Changes that come FROM a screen resize are skipped: the fraction worth
+-- keeping is the one from before it, and 'columns' has already been updated by the time this fires.
+vim.api.nvim_create_autocmd("WinResized", {
+  group = group,
+  callback = function()
+    local win = vim.o.columns == screen_columns and terminal_win()
+    if win then
+      fraction = vim.api.nvim_win_get_width(win) / vim.o.columns
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("VimResized", {
+  group = group,
+  callback = function()
+    screen_columns = vim.o.columns
+    M.restore_width()
+  end,
+})
+
+vim.api.nvim_create_autocmd("WinNew", {
+  group = group,
+  -- Scheduled so the new window's layout has settled; a no-op once the column is leftmost already.
+  callback = function()
+    vim.schedule(ensure_leftmost)
+  end,
+})
+
 --- Run `show`, then `settle` on the next tick, with snacks' equalize() suppressed in between.
 ---
 --- Snacks.win:open_win() schedules self:equalize(), which resizes every window whose w:snacks_win
---- records the same relative + position — for us, both "left" terminals. It fires while they are
---- still side by side, each its own full-height column, so it shrinks a full-height window; nvim
---- can only absorb that by shrinking the topframe and inflating 'cmdheight', which leaves a dead
---- band at the bottom of the screen that survives closing both terminals. equalize() exists to
---- balance snacks' own stacking, which is switched off here, so it has nothing to contribute.
---- Patched on the class rather than the instance because claudecode.nvim owns its terminal object
---- and doesn't expose it; the patch only stands for the one tick that the scheduled call lands in.
+--- records the same relative + position — for us, both "left" terminals, since deregister() hasn't run
+--- on the newly shown one yet. It fires while they are still side by side, each its own full-height
+--- column, so it shrinks a full-height window; nvim can only absorb that by shrinking the topframe and
+--- inflating 'cmdheight', which leaves a dead band at the bottom of the screen that survives closing
+--- both terminals. equalize() exists to balance snacks' own stacking, which is switched off here, so it
+--- has nothing to contribute. Patched on the class rather than the instance because claudecode.nvim
+--- owns its terminal object and doesn't expose it; the patch only stands for the one tick that the
+--- scheduled call lands in.
 ---@param show fun()
 ---@param settle fun()
 local function without_equalize(show, settle)
@@ -153,66 +289,11 @@ function M.toggle_shell()
       return
     end
     place(term.win, M.claude_win(), false, width)
+    -- Explicitly, not just via the WinNew autocmd: that fires (and is scheduled) before place() runs,
+    -- when the column is still at column 0 and there is nothing to fix.
+    ensure_leftmost()
   end)
 end
-
--- Keep the column's PROPORTION across a screen resize (resizing the terminal, or moving the window
--- to another monitor). Nvim rescales window heights proportionally but hands the entire width
--- difference to the rightmost window, so the sidebar keeps its absolute column count: a 33% column on
--- a wide monitor becomes a 66% column on a laptop screen. Remember the fraction instead and re-apply
--- it. Note this deliberately does NOT change what a fresh open gets — close both terminals and the
--- column comes back at M.width, as before.
-local fraction = M.width
-local screen_columns = vim.o.columns
-
---- Is `win` one of the two sidebar terminals? Identity, not geometry: anything automatic must not
---- mistake a plain code split that happens to sit at column 0 for the sidebar.
----@param win integer
----@return boolean
-function M.is_sidebar_win(win)
-  return win == M.shell_win() or win == M.claude_win()
-end
-
---- The sidebar column, but only when one of our terminals is actually in it.
----@return integer? win
-local function terminal_win()
-  local win = M.win()
-  if win and M.is_sidebar_win(win) then
-    return win
-  end
-end
-
---- Re-apply the remembered fraction to the column. Called after a screen resize, and by anything else
---- that leaves the column at the wrong proportion (see config/autocmds.lua).
-function M.restore_width()
-  local win = terminal_win()
-  if win then
-    vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * fraction))
-  end
-end
-
-local group = vim.api.nvim_create_augroup("sidebar_width", { clear = true })
-
--- Any width change records the new fraction — a toggle, the Option+[ / Option+] cycle, or a mouse
--- drag on the separator. Changes that come FROM a screen resize are skipped: the fraction worth
--- keeping is the one from before it, and 'columns' has already been updated by the time this fires.
-vim.api.nvim_create_autocmd("WinResized", {
-  group = group,
-  callback = function()
-    local win = vim.o.columns == screen_columns and terminal_win()
-    if win then
-      fraction = vim.api.nvim_win_get_width(win) / vim.o.columns
-    end
-  end,
-})
-
-vim.api.nvim_create_autocmd("VimResized", {
-  group = group,
-  callback = function()
-    screen_columns = vim.o.columns
-    M.restore_width()
-  end,
-})
 
 --- Run a ClaudeCode command and settle the split into the column, ABOVE the shell when that's open.
 ---@param cmd string an Ex command, e.g. "ClaudeCode" or "ClaudeCodeFocus"
@@ -228,6 +309,7 @@ function M.claude(cmd)
         return
       end
       place(claude, M.shell_win(), true, width)
+      ensure_leftmost()
     end)
   end
 end
