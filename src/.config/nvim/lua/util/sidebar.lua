@@ -228,7 +228,14 @@ vim.api.nvim_create_autocmd("WinResized", {
   callback = function()
     local win = vim.o.columns == screen_columns and terminal_win()
     if win then
-      fraction = vim.api.nvim_win_get_width(win) / vim.o.columns
+      local frac = vim.api.nvim_win_get_width(win) / vim.o.columns
+      -- Ignore the extremes. Option+z (see config/keymaps.lua) maximises a window by squeezing every
+      -- other one down to 'winminwidth', so a zoom would otherwise record a column of ~1 cell — or the
+      -- whole screen, when it's the sidebar that's zoomed — and hand that back on the next toggle.
+      -- Nothing between 10% and 90% is reachable except by deliberately asking for it.
+      if frac > 0.1 and frac < 0.9 then
+        fraction = frac
+      end
     end
   end,
 })

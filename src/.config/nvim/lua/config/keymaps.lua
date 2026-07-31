@@ -103,6 +103,39 @@ end
 vim.keymap.set({ "n", "t" }, "<M-]>", cycle_sidebar_width(true), { desc = "Widen left split" })
 vim.keymap.set({ "n", "t" }, "<M-[>", cycle_sidebar_width(false), { desc = "Narrow left split" })
 
+-- Option+z fullscreens the focused nvim window, one level down from zellij's own Alt+z
+-- (ToggleFocusFullscreen). Zellij binds it in every mode except "locked", so Ctrl+g then Option+z
+-- forwards the same keypress here: one key zooms whatever is actually in front of you, a zellij pane
+-- or an nvim window. Mapped in terminal mode too, so it works from the Claude prompt.
+--
+-- Deliberately NOT LazyVim's <leader>wm (Snacks zen zoom): that re-shows the buffer in a full-screen
+-- FLOAT, and a float holding the Claude terminal buffer makes util/sidebar's window lookups match it —
+-- claude_win() finds the float, and the WinNew that opening it fires sends ensure_leftmost() at a
+-- window that can't be moved. Maximising in place leaves the real split layout alone, so winrestcmd()
+-- puts every window back at the exact size it had, sidebar width included.
+local zoom ---@type { cmd: string, wins: integer }? winrestcmd() and window count from before the zoom
+local function toggle_zoom()
+  local wins = #vim.api.nvim_tabpage_list_wins(0)
+  if zoom then
+    -- winrestcmd() addresses windows by number, so it only means what it said while the layout is
+    -- unchanged. If something opened or closed while zoomed, drop the state rather than resizing the
+    -- wrong windows — the next press just zooms again from here.
+    if zoom.wins == wins then
+      vim.cmd(zoom.cmd)
+    end
+    zoom = nil
+  elseif wins > 1 and vim.api.nvim_win_get_config(0).relative == "" then
+    zoom = { cmd = vim.fn.winrestcmd(), wins = wins }
+    vim.cmd.wincmd("_")
+    vim.cmd.wincmd("|")
+  end
+  -- wincmd drops terminal insert mode, same as util/sidebar's move().
+  if vim.fn.mode() == "t" then
+    vim.cmd.startinsert()
+  end
+end
+vim.keymap.set({ "n", "t" }, "<M-z>", toggle_zoom, { desc = "Zoom window (toggle)" })
+
 -- Horizontal mouse scroll (Magic Mouse, Keychron M6 horizontal wheel)
 vim.keymap.set({ "n", "v" }, "<ScrollWheelLeft>", "3zh", { desc = "Scroll left" })
 vim.keymap.set({ "n", "v" }, "<ScrollWheelRight>", "3zl", { desc = "Scroll right" })
