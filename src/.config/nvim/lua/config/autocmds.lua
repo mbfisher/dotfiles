@@ -38,7 +38,34 @@ end
 local function open_home_screen(win)
   local buf = vim.api.nvim_win_get_buf(win)
   local throwaway = vim.bo[buf].buftype == "" and not vim.bo[buf].modified and vim.fn.bufname(buf) == ""
-  Snacks.dashboard.open({ win = win, buf = throwaway and buf or nil })
+  -- pcall because this runs from a scheduled callback: an error thrown there leaves nvim sitting on a
+  -- hit-enter prompt with no way to type at it (same reasoning as util/sidebar.lua's ensure_leftmost).
+  local ok, err = pcall(Snacks.dashboard.open, { win = win, buf = throwaway and buf or nil })
+  if not ok then
+    vim.notify("home screen: " .. tostring(err), vim.log.levels.WARN)
+  end
+end
+
+--- Does `win` (non-floating) hold a panel rather than code? The two sidebar terminals, the <leader>e
+--- explorer, a picker list — anything sharing the screen with the code window rather than being it.
+--- Snacks stamps w:snacks_win on every window it owns, which is what tells the explorer apart from a
+--- plain split. Without this the explorer counted as the code window, so the dashboard opened on top
+--- of it and the explorer's own layout tore that window straight back down — each teardown fired the
+--- events below and opened another dashboard. That loop is what produced the "Invalid 'group'" /
+--- "Invalid cursor line" errors on every keypress (snacks' dashboard augroup name is global and its
+--- buffer is bufhidden=wipe, so a second dashboard deletes the first's augroup mid-init) and needed a
+--- force-quit to escape.
+---@param win integer
+---@return boolean
+local function is_panel_win(win)
+  if sidebar.is_sidebar_win(win) then
+    return true
+  end
+  -- The dashboard is our own placeholder, not a panel: a file is meant to replace it.
+  if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "snacks_dashboard" then
+    return false
+  end
+  return vim.w[win].snacks_win ~= nil
 end
 
 local home_group = vim.api.nvim_create_augroup("home_screen", { clear = true })
@@ -57,13 +84,13 @@ local function fill_empty_screen(closed_buf)
   if exiting or not package.loaded["snacks"] then
     return
   end
-  -- Where code lives: a non-floating window that isn't part of the sidebar. Floats (pickers, lazygit,
+  -- Where code lives: a non-floating window that isn't a panel. Floats (pickers, lazygit,
   -- notifications) don't count as somewhere to open a file.
-  local code_win, sidebar_wins = nil, 0
+  local code_win, panels = nil, 0
   for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
     if vim.api.nvim_win_get_config(win).relative == "" then
-      if sidebar.is_sidebar_win(win) then
-        sidebar_wins = sidebar_wins + 1
+      if is_panel_win(win) then
+        panels = panels + 1
       else
         code_win = code_win or win
       end
@@ -81,10 +108,10 @@ local function fill_empty_screen(closed_buf)
     return
   end
 
-  if sidebar_wins == 0 then
+  if panels == 0 then
     return
   end
-  -- Nothing but the sidebar left. Make room on the right, focused, and hand the column its width back.
+  -- Nothing but panels left. Make room on the right, focused, and hand the column its width back.
   -- `vsplit` rather than `vnew`: vnew's empty buffer is listed, so it lingers in the bufferline as a
   -- stray [No Name] as soon as something replaces it in the window.
   vim.cmd("botright vsplit")
@@ -102,6 +129,15 @@ end
 vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout", "WinClosed" }, {
   group = home_group,
   callback = function(args)
+    -- Never react to the dashboard's own buffer going away. It's bufhidden=wipe, so putting a second
+    -- dashboard in a window wipes the first — reacting to that opens a third, and round it goes.
+    if
+      args.event ~= "WinClosed"
+      and vim.api.nvim_buf_is_valid(args.buf)
+      and vim.bo[args.buf].filetype == "snacks_dashboard"
+    then
+      return
+    end
     -- The window is still in the layout during WinClosed, so read its buffer now; the check itself is
     -- scheduled because these events all fire while the buffer/window is still there to be counted.
     local win = args.event == "WinClosed" and tonumber(args.match)
