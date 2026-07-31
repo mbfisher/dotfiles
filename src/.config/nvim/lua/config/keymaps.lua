@@ -126,8 +126,14 @@ local function toggle_zoom()
     zoom = nil
   elseif wins > 1 and vim.api.nvim_win_get_config(0).relative == "" then
     zoom = { cmd = vim.fn.winrestcmd(), wins = wins }
+    -- LazyVim sets winminwidth = 5, so maximising otherwise left a 5-column strip of the neighbour
+    -- still rendering its content. Drop both floors for the resize only — the sizes stick once they're
+    -- put back — which collapses every other window to nothing but its separator line.
+    local minwidth, minheight = vim.o.winminwidth, vim.o.winminheight
+    vim.o.winminwidth, vim.o.winminheight = 0, 0
     vim.cmd.wincmd("_")
     vim.cmd.wincmd("|")
+    vim.o.winminwidth, vim.o.winminheight = minwidth, minheight
   end
   -- wincmd drops terminal insert mode, same as util/sidebar's move().
   if vim.fn.mode() == "t" then
