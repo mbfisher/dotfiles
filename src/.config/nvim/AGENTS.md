@@ -9,6 +9,24 @@ This is a **LazyVim** configuration. The goal is minimal customization on top of
   with an async `root_dir(bufnr, on_dir)` signature; see the gotcha below.
 - **LazyVim** latest (managed via `:Lazy`).
 
+## Workspace Layout
+
+The nesting I work in, each level one-to-many with the next:
+
+| Level | Unit | Notes |
+|-------|------|-------|
+| Ghostty tab + zellij session | **repo** | One session per repo, named after it |
+| zellij tab | **worktree** | Multiple tabs per session — one per checkout/branch |
+| zellij pane | **nvim + Claude Code** | Multiple panes per tab, but only ONE should be writing |
+
+Each nvim instance runs its own claudecode.nvim WebSocket server and passes that port to the Claude it spawns in the
+`<C-;>` split, so a second pane's Claude auto-connects to that pane's nvim — no `/ide` needed, no cross-talk. That's why
+a secondary chat is a new zellij pane rather than a second Claude terminal inside one nvim: claudecode.nvim holds a
+single terminal instance, so a second session there would clobber the first.
+
+Panes in the same tab share one working tree, so concurrent writers collide on swap files. One writer plus any number of
+readers is the rule; if you need two writers, `/bg` one so Claude gives it its own worktree under `.claude/worktrees/`.
+
 ## Before Making ANY Changes
 
 1. **Read the existing config first** - Check `lua/plugins/` for existing customizations
