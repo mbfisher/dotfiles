@@ -48,13 +48,10 @@ end
 
 --- Does `win` (non-floating) hold a panel rather than code? The two sidebar terminals, the <leader>e
 --- explorer, a picker list — anything sharing the screen with the code window rather than being it.
---- Snacks stamps w:snacks_win on every window it owns, which is what tells the explorer apart from a
---- plain split. Without this the explorer counted as the code window, so the dashboard opened on top
---- of it and the explorer's own layout tore that window straight back down — each teardown fired the
---- events below and opened another dashboard. That loop is what produced the "Invalid 'group'" /
---- "Invalid cursor line" errors on every keypress (snacks' dashboard augroup name is global and its
---- buffer is bufhidden=wipe, so a second dashboard deletes the first's augroup mid-init) and needed a
---- force-quit to escape.
+--- Keyed off w:snacks_win, which every window snacks owns carries and a plain split never does: it has
+--- to cover panels this config doesn't place itself, not just the sidebar. Recognising only the sidebar
+--- put the home screen on top of the explorer, whose layout tore the window down again and re-triggered
+--- this — an error loop that needed a force-quit. See issues/005, "the explorer is not the code window".
 ---@param win integer
 ---@return boolean
 local function is_panel_win(win)

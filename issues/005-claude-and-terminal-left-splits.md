@@ -166,6 +166,48 @@ Two mistakes worth not repeating, both from the first attempt:
   nvim leaves after the last file is deleted), pass that buffer to `Snacks.dashboard.open` as its own
   so it gets taken over rather than orphaned.
 
+### Third mistake: the explorer is not the code window
+
+Symptom (2026-07-31): with Claude and the `<leader>e` explorer both open, closing the Claude window
+started an error loop that made **every keypress** print a stack trace and needed a force-quit:
+
+```
+snacks/dashboard.lua:731: Invalid cursor line: out of range      <- update_cursor
+snacks/dashboard.lua:249: Invalid 'group': 466                   <- init, group id climbing each time
+  ... config/autocmds.lua:41 open_home_screen <- :80 fill_empty_screen <- :110 (BufDelete/WinClosed)
+```
+
+`fill_empty_screen()` classified windows as "sidebar or code", using `is_sidebar_win()` — which is
+deliberately identity-based on the *two terminals*. The explorer is neither, so it was picked as the
+code window, and the home screen opened **on top of it**. The explorer's own layout then tore that
+window back down, which fired `BufDelete`/`WinClosed`, which opened another dashboard, and so on.
+
+Two snacks details turn that loop into unreadable errors rather than a visible flicker:
+
+- The dashboard buffer is `bufhidden = "wipe"`, so putting a second dashboard in a window **wipes the
+  first**. Its `BufWipeout` handler calls `nvim_del_augroup_by_id(self.augroup)`.
+- `M.open()` creates that augroup by the fixed global name `snacks_dashboard`, so the second
+  dashboard's augroup has the same id as the first's. The wipe fires from `nvim_win_set_buf()` *inside*
+  `init()`, between the `nvim_create_augroup` and the first `nvim_create_autocmd` using it — so the new
+  dashboard deletes its own group mid-init (`Invalid 'group'`), aborts half-rendered, and the next
+  attempt's `update_cursor()` then indexes lines that aren't there (`Invalid cursor line`).
+
+Fixes in `config/autocmds.lua`:
+
+- Classify by `w:snacks_win` (`is_panel_win()`), not by the sidebar terminals. Every window snacks owns
+  carries it — explorer layout boxes, picker lists — and a plain split never does. The dashboard is
+  excluded by filetype, because it *is* a valid home for a file to replace.
+- Ignore `BufDelete`/`BufWipeout` for `snacks_dashboard` buffers, so the wipe above can't re-enter.
+- `pcall` the `Snacks.dashboard.open`, since an error from a scheduled callback wedges nvim on a
+  hit-enter prompt (as in `ensure_leftmost()` above).
+
+The general rule: **anything automatic that asks "where does code live?" must exclude every snacks
+panel, not just the ones this config places itself.** New panels get added by plugins without notice;
+`w:snacks_win` is the only signal that covers them all. Note this is the opposite of the recurrence
+note below about `util/sidebar.lua` — there we need to identify *our* two windows specifically, and
+`w:snacks_win` is unreliable for that (claudecode re-stamps it). Here we need "not code", and its mere
+presence is enough.
+
 ## Keeping the buffer tabs off the sidebar
 
 bufferline's tabline is inherently full width, so the buffer tabs ran across the top of the sidebar as
