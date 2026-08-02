@@ -159,6 +159,12 @@ local function toggle_zoom()
 end
 vim.keymap.set({ "n", "t" }, "<M-z>", toggle_zoom, { desc = "Zoom window (toggle)" })
 
--- Horizontal mouse scroll (Magic Mouse, Keychron M6 horizontal wheel)
+-- Horizontal mouse scroll (Magic Mouse, Keychron M6 horizontal wheel).
+--
+-- These DON'T fire in my normal setup, and it isn't nvim's fault: zellij drops horizontal wheel
+-- events instead of forwarding them to the pane, so <ScrollWheelLeft>/<ScrollWheelRight> never
+-- reach nvim through ghostty > zellij > nvim. See zellij-org/zellij#4628; the fix (PR #4860) is
+-- still open and unmerged as of 0.44.3. Keep the maps — they work in a bare ghostty pane, and
+-- they'll start working inside zellij the moment that PR lands.
 vim.keymap.set({ "n", "v" }, "<ScrollWheelLeft>", "3zh", { desc = "Scroll left" })
 vim.keymap.set({ "n", "v" }, "<ScrollWheelRight>", "3zl", { desc = "Scroll right" })

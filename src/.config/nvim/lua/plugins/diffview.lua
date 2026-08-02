@@ -95,7 +95,9 @@ return {
           width = 35,
         },
       },
-      -- Enable horizontal mouse scroll in all diffview windows (Keychron M6 horizontal wheel)
+      -- Enable horizontal mouse scroll in all diffview windows (Keychron M6 horizontal wheel).
+      -- Same caveat as config/keymaps.lua: zellij never forwards these events, so they only fire
+      -- in a bare ghostty pane. See zellij-org/zellij#4628.
       keymaps = {
         view = {
           { "n", "<ScrollWheelLeft>", "3zh" },
