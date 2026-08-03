@@ -8,7 +8,7 @@
                         "product_id": 53296,
                         "vendor_id": 13364
                     },
-                    "ignore": false
+                    "ignore": true
                 },
                 {
                     "identifiers": {
@@ -24,7 +24,7 @@
                         "product_id": 53286,
                         "vendor_id": 13364
                     },
-                    "ignore": false
+                    "ignore": true
                 },
                 {
                     "identifiers": {
