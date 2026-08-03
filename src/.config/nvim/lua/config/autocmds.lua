@@ -138,7 +138,14 @@ vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout", "WinClosed" }, {
     -- The window is still in the layout during WinClosed, so read its buffer now; the check itself is
     -- scheduled because these events all fire while the buffer/window is still there to be counted.
     local win = args.event == "WinClosed" and tonumber(args.match)
-    local closed_buf = win and vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) or nil
+    if win and vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_config(win).relative ~= "" then
+      -- A float closing never takes the code window with it, and reacting to one broke glance.nvim's
+      -- gd/gr peek: its list and preview are floats showing a real file buffer, so closing them (<CR>
+      -- on a reference, q on a definition) passed that buffer as `closed_buf`. With the file you were
+      -- looking at skipped, "no work left open" looked true and the home screen replaced it.
+      return
+    end
+    local closed_buf = win and vim.api.nvim_win_get_buf(win) or nil
     vim.schedule(function()
       fill_empty_screen(closed_buf)
     end)
