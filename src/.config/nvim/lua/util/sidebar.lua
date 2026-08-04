@@ -218,6 +218,27 @@ local function ensure_leftmost()
   end
 end
 
+--- Re-send `win`'s current size to the process running in it.
+---
+--- Opening the <leader>e explorer left Claude Code drawing its whole UI ~18 columns wide inside a
+--- 100-column window: nvim's own geometry was right (the window reported the full column width) but the
+--- child was still holding a stale, much narrower pty size, so it wrapped and truncated everything to
+--- that. Nvim only pushes a size down the pty when the window size CHANGES, which is the only reason
+--- Option+] appeared to fix it — any width change re-sent the size. The explorer's layout squeezes the
+--- column on the way in and ensure_leftmost() puts the width back, and somewhere across those two the
+--- pty misses the final size. jobresize() re-sends it without touching the layout, so there's no flicker
+--- and no width to record.
+---@param win integer?
+local function resync_pty(win)
+  if not (win and vim.api.nvim_win_is_valid(win)) then
+    return
+  end
+  local job = vim.b[vim.api.nvim_win_get_buf(win)].terminal_job_id
+  if job then
+    pcall(vim.fn.jobresize, job, vim.api.nvim_win_get_width(win), vim.api.nvim_win_get_height(win))
+  end
+end
+
 local group = vim.api.nvim_create_augroup("sidebar_width", { clear = true })
 
 -- Any width change records the new fraction — a toggle, the Option+[ / Option+] cycle, or a mouse
@@ -226,6 +247,14 @@ local group = vim.api.nvim_create_augroup("sidebar_width", { clear = true })
 vim.api.nvim_create_autocmd("WinResized", {
   group = group,
   callback = function()
+    -- Scheduled, so it reads the size the column settled at rather than one from the middle of a
+    -- reshuffle: anything that resizes our windows (the explorer, a picker, Option+z) usually does it in
+    -- several steps, and ensure_leftmost() runs after this fires. A no-op when the pty already agrees.
+    vim.schedule(function()
+      resync_pty(M.claude_win())
+      resync_pty(M.shell_win())
+    end)
+
     local win = vim.o.columns == screen_columns and terminal_win()
     if win then
       local frac = vim.api.nvim_win_get_width(win) / vim.o.columns
