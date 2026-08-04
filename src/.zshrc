@@ -293,18 +293,24 @@ ws() {
   if ! wt switch $1 2>/dev/null; then
     if git ls-remote --heads origin "$1" | grep -q "$1"; then
       git fetch origin "$1"
-      wt switch --create $1 --base "origin/$1"
+      wt switch --create $1 --base "origin/$1" || { cd "$main"; return 1; }
     else
       # Fetch latest master so new branches start from upstream HEAD.
       git fetch origin master
-      wt switch --create $1 --base origin/master
+      wt switch --create $1 --base origin/master || { cd "$main"; return 1; }
     fi
   fi
   local wt_path="$PWD"
   cd "$main"
+  # Belt and braces: if wt exited 0 but never cd'd us out of the main copy, the
+  # worktree isn't there, so don't open a tab pointed at the main checkout.
+  if [[ "$wt_path" == "$main" ]]; then
+    echo "ws: no worktree for '$1' — not opening a tab" >&2
+    return 1
+  fi
   # Restore ZELLIJ_SESSION_NAME if mise hook-env corrupted it during wt switch (see issues/002).
   _zellij_session_guard
-  zellij action new-tab --layout repo --cwd "$wt_path"
+  zellij action new-tab --layout nvim --cwd "$wt_path"
 }
 
 # Enable tab completion
