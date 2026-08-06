@@ -50,8 +50,9 @@ return {
       { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Diff view (working changes)" },
       { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "File history" },
     },
-    -- Force tabline visible when diffview opens (so tab indicators show even with 1 buffer),
-    -- then restore tabline and clean up buffers that diffview opened when it closes.
+    -- Clean up buffers that diffview opened when it closes. (Making the tabline visible for
+    -- diffview's tab is handled in plugins/bufferline.lua — setting 'showtabline' here didn't
+    -- stick, since bufferline resets it on every redraw.)
     init = function()
       local pre_diffview_bufs = {}
 
@@ -63,7 +64,6 @@ return {
           for _, buf in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
             pre_diffview_bufs[buf.bufnr] = true
           end
-          vim.o.showtabline = 2
         end,
       })
 
@@ -77,7 +77,6 @@ return {
             end
           end
           pre_diffview_bufs = {}
-          vim.o.showtabline = vim.fn.len(vim.fn.getbufinfo({ buflisted = 1 })) > 1 and 2 or 0
         end,
       })
     end,
