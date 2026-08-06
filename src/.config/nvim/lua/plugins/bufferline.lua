@@ -10,7 +10,11 @@ return {
       -- One entry covers every case: bufferline takes the width from the TOPMOST window of a split
       -- column, so it works for Claude alone, the shell alone, and the two stacked.
       opts.options.offsets = opts.options.offsets or {}
-      table.insert(opts.options.offsets, { filetype = "snacks_terminal" })
+      -- ...but tabs are the OUTER unit — the sidebar lives inside a tab — so the bar should still
+      -- read as one strip spanning the full width. Painting the offset in BufferLineFill (rather
+      -- than letting bufferline guess the sidebar window's own background) does that: the reserved
+      -- section looks like empty tabline instead of a hole above the terminal.
+      table.insert(opts.options.offsets, { filetype = "snacks_terminal", highlight = "BufferLineFill" })
 
       -- bufferline's own auto-toggle counts only listed BUFFERS, and it re-runs from the tabline
       -- expression itself — i.e. on every redraw — so anything else that sets 'showtabline' (e.g.

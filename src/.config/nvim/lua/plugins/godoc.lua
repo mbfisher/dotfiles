@@ -6,8 +6,11 @@ return {
       "nvim-treesitter/nvim-treesitter",
       branch = "main",
       build = ":TSUpdate godoc go", -- install/update parsers
-      config = function()
-        require("nvim-treesitter.parsers").godoc = {
+      -- Use `opts` rather than `config`: lazy.nvim lets the last `config` win, so defining one
+      -- here would silently replace LazyVim's treesitter config — the thing that starts
+      -- highlighting on FileType. `opts` functions are chained instead.
+      opts = function(_, opts)
+        local godoc_parser = {
           install_info = {
             url = "https://github.com/fredrikaverpil/tree-sitter-godoc",
             files = { "src/parser.c" },
@@ -15,6 +18,7 @@ return {
           },
           filetype = "godoc",
         }
+        require("nvim-treesitter.parsers").godoc = godoc_parser
 
         -- Map godoc filetype to use godoc parser
         vim.treesitter.language.register("godoc", "godoc")
@@ -23,7 +27,7 @@ return {
         vim.api.nvim_create_autocmd("User", {
           pattern = "TSUpdate",
           callback = function()
-            require("nvim-treesitter.parsers").godoc = parser_config
+            require("nvim-treesitter.parsers").godoc = godoc_parser
           end,
         })
 
@@ -34,6 +38,8 @@ return {
             vim.bo.filetype = "godoc"
           end,
         })
+
+        vim.list_extend(opts.ensure_installed, { "go", "godoc" })
       end,
     },
   },
