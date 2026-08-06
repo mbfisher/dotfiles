@@ -3,7 +3,8 @@
 -- ============================================================================
 -- Open with <leader>gd. If a diffview tab is already open it switches to it
 -- instead of spawning a duplicate. Press g? in any diffview window for the full
--- keymap list.
+-- keymap list. <leader>gD does the same for a PR preview: everything on this branch, committed and
+-- uncommitted, against a freshly fetched origin base branch.
 --
 -- THE ONE IDEA: staging is just editing the INDEX buffer and saving it (:w).
 -- Each file shows two versions:
@@ -37,6 +38,80 @@
 -- WHEN DONE: diffview leaves committing to your git tooling. Close the view with
 -- :DiffviewClose (or :tabclose) and commit however you like.
 -- ============================================================================
+-- <leader>gD: "what would my PR look like?" — the diff GitHub would show if I opened a PR right
+-- now, except taken against the live working tree so uncommitted changes are in it too. Fetching
+-- origin is slow on big repos, so it runs async (vim.system) behind a spinner notification rather
+-- than freezing the UI — same pattern as the PR picker action in plugins/snacks.lua.
+local function pr_diff()
+  local notif = "diffview-pr-diff"
+  local done = false
+  local timer = assert(vim.uv.new_timer())
+  timer:start(
+    0,
+    80,
+    vim.schedule_wrap(function()
+      if done then
+        return
+      end
+      Snacks.notify(Snacks.util.spinner() .. "  Fetching origin…", {
+        id = notif,
+        title = "Diffview",
+        timeout = false, -- keep it up until the fetch finishes
+      })
+    end)
+  )
+
+  -- Replaces the spinner notification (same id) with the outcome.
+  local function finish(msg, level)
+    done = true
+    timer:stop()
+    timer:close()
+    Snacks.notify(msg, {
+      id = notif,
+      title = "Diffview",
+      level = level,
+      timeout = level == "error" and 5000 or 1000,
+    })
+  end
+
+  vim.system(
+    { "git", "fetch", "origin", "+refs/heads/*:refs/remotes/origin/*" },
+    { text = true },
+    vim.schedule_wrap(function(res)
+      if res.code ~= 0 then
+        finish("Fetch failed\n" .. (res.stderr or ""), "error")
+        return
+      end
+
+      -- Base branch is whatever origin/HEAD points at (master here, main elsewhere); fall back to
+      -- the usual names for clones where the remote HEAD ref was never set up locally.
+      local base
+      for _, ref in ipairs({ "origin/HEAD", "origin/master", "origin/main" }) do
+        if vim.system({ "git", "rev-parse", "--verify", "--quiet", ref }):wait().code == 0 then
+          base = ref
+          break
+        end
+      end
+      if not base then
+        finish("No origin/HEAD, origin/master or origin/main", "error")
+        return
+      end
+
+      -- Merge-base rather than the branch tip, because GitHub's PR diff ignores commits landed on
+      -- the base branch since we branched. Handing diffview a single rev puts the working tree on
+      -- the right-hand side, so committed and uncommitted changes appear together.
+      local mb = vim.system({ "git", "merge-base", base, "HEAD" }, { text = true }):wait()
+      if mb.code ~= 0 then
+        finish("No merge base with " .. base, "error")
+        return
+      end
+
+      finish("Diffing working tree against " .. base)
+      vim.cmd("DiffviewOpen " .. vim.trim(mb.stdout))
+    end)
+  )
+end
+
 return {
   { "folke/lazydev.nvim", opts = { library = { { path = "diffview-plus.nvim", words = { "diffview" } } } } },
   {
@@ -48,6 +123,7 @@ return {
       -- Primary git flow: review + stage uncommitted changes (stage/unstage hunks or files with `-` in the file panel).
       -- DiffviewOpen reuses an already-open diffview tab if one exists (switches to it) rather than spawning a duplicate.
       { "<leader>gd", "<cmd>DiffviewOpen<cr>", desc = "Diff view (working changes)" },
+      { "<leader>gD", pr_diff, desc = "Diff view (PR preview vs origin)" },
       { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "File history" },
     },
     -- Clean up buffers that diffview opened when it closes. (Making the tabline visible for

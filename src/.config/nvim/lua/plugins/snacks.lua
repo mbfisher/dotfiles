@@ -12,7 +12,7 @@ return {
     -- changes carry through.
     keys = {
       { "<leader>gd", false }, -- reserved for diffview
-      { "<leader>gD", false }, -- unused
+      { "<leader>gD", false }, -- reserved for diffview's PR-preview diff
     },
     -- Route the snacks GitHub PR picker's "View PR diff" action into diffview
     -- instead of the built-in snacks gh_diff picker. Flow: <leader>gp -> pick a PR
