@@ -1,7 +1,7 @@
 # Karabiner adds ~0.5s scroll latency to the Keychron M6 mouse
 
 **Date:** 2026-08-03
-**Status:** Fixed in `src/.config/karabiner/karabiner.json`
+**Status:** Fixed. Superseded 2026-08-06 — the M6 device rules were removed entirely (see "Follow-up" below).
 **Affects:** `src/.config/karabiner/karabiner.json`, `src/.config/karabiner/README.md`
 
 ## Symptoms
@@ -52,3 +52,40 @@ will show up in `git status` rather than being lost — check there first if the
 
 Newly attached pointing devices default to being grabbed, so a different mouse may present the same symptom with a new
 `product_id`. The general rule for this setup: Karabiner should grab keyboards only.
+
+## Follow-up (2026-08-06)
+
+### The M6 rules were removed
+
+The M6 is never actually used on this machine, so all four of its device entries — both `is_pointing_device` and both
+`is_game_pad` — were deleted rather than left as `"ignore": true` placeholders. `karabiner.json` now lists keyboards
+only.
+
+Consequence: there is no longer a rule pre-empting the default grab, so **attaching any pointing device here will
+reproduce the original half-second scroll lag**. Untick it in Settings → Devices if that happens.
+
+### A trackpad lag recurrence that was NOT this issue
+
+Same day, laggy scrolling returned and was initially assumed to be a recurrence of the above. It was not. Both
+diagnostic paths from this issue came back clean:
+
+- `karabiner.json` was unmodified from the fix commit, both pointing entries still ignored, `git status` clean.
+- The lag was on the **built-in trackpad**, which Karabiner never touched — the M6 wasn't even connected.
+
+The trigger was unplugging the laptop from its external monitor. Working through it:
+
+1. WindowServer sat at 73.8% with Firefox Developer Edition's GPU helper at 33.7%. Quitting Firefox took WindowServer
+   to 53.6%; quitting Slack took it to 6.2% — healthy.
+2. **The lag persisted at 6.2%.** So CPU saturation was a coincident symptom, not the cause. Chasing it wasted the
+   first three steps.
+
+Cause: the display disconnect leaves stale compositing state that no amount of quitting apps clears. **Logging out and
+back in fixes it** (confirmed anecdotally across several occurrences). Nothing lighter has been found to work —
+`killall WindowServer` is not a lighter option, it is a forced logout that kills every app without save prompts.
+
+No prevention is known. It appears to be a macOS WindowServer bug around display hot-unplug, not anything this repo
+configures.
+
+The transferable lesson: high WindowServer CPU after a display change is easy to find and easy to over-attribute.
+Confirm the lag actually tracks the CPU before spending time on it — and check whether the lag is on the mouse or the
+trackpad first, since that one question separates the input path from the display path.
