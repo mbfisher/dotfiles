@@ -22,20 +22,16 @@ local M = {}
 
 --- Default width of the column as a fraction of the screen. Option+[ / Option+] cycle it live
 --- (33/50/66) via the keymaps in config/keymaps.lua.
-M.width = 0.33
+M.width = 0.5
 
---- The sidebar column: whichever non-floating window sits hard against column 0 while something
---- else shares the row. Deliberately not keyed off snacks' window vars (see above), which also
---- means callers work from either side of the split.
+--- The sidebar column: whichever of our two terminals is currently visible. Identity via
+--- claude_win()/shell_win() rather than "sits hard against column 0" geometry — diffview's file
+--- panel pins itself to column 0 too, so with both terminals hidden the geometric check picked
+--- IT instead, and callers (column_width() below, the Option+[ / Option+] resize keymap) went on
+--- to treat its width as the sidebar's, handing Claude the panel's width on the next toggle.
 ---@return integer? win
 function M.win()
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local floating = vim.api.nvim_win_get_config(win).relative ~= ""
-    local at_left_edge = vim.api.nvim_win_get_position(win)[2] == 0
-    if not floating and at_left_edge and vim.api.nvim_win_get_width(win) < vim.o.columns then
-      return win
-    end
-  end
+  return M.claude_win() or M.shell_win()
 end
 
 --- Current width of the column in cells, or the default when it isn't open. Captured before a
@@ -156,19 +152,10 @@ end
 local fraction = M.width
 local screen_columns = vim.o.columns
 
---- The sidebar column, but only when one of our terminals is actually in it.
----@return integer? win
-local function terminal_win()
-  local win = M.win()
-  if win and M.is_sidebar_win(win) then
-    return win
-  end
-end
-
 --- Re-apply the remembered fraction to the column. Called after a screen resize, and by anything else
 --- that leaves the column at the wrong proportion (see config/autocmds.lua).
 function M.restore_width()
-  local win = terminal_win()
+  local win = M.win()
   if win then
     vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * fraction))
   end
@@ -255,7 +242,7 @@ vim.api.nvim_create_autocmd("WinResized", {
       resync_pty(M.shell_win())
     end)
 
-    local win = vim.o.columns == screen_columns and terminal_win()
+    local win = vim.o.columns == screen_columns and M.win()
     if win then
       local frac = vim.api.nvim_win_get_width(win) / vim.o.columns
       -- Ignore the extremes. Option+z (see config/keymaps.lua) maximises a window by squeezing every

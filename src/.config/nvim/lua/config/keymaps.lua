@@ -61,7 +61,7 @@ vim.keymap.set({ "n", "t" }, "<C-/>", sidebar.toggle_shell, { desc = "Terminal (
 vim.keymap.set({ "n", "t" }, "<C-_>", sidebar.toggle_shell, { desc = "which_key_ignore" })
 
 -- Option+] / Option+[ cycle the left split (shell / Claude Code) through fixed widths:
--- 33-66 (the default) -> 50-50 -> 66-33. Steps clamp at each end rather than wrapping, so
+-- 33-66 -> 50-50 (the default) -> 66-33. Steps clamp at each end rather than wrapping, so
 -- holding one key can't overshoot back to the other extreme.
 -- Took over from the zellij "Alt [" / "Alt ]" pane-resize binds — claude is an nvim window
 -- now, not a zellij pane. Ghostty sends these as CSI u text (see ghostty/config) so they reach

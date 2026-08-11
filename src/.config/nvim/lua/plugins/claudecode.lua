@@ -16,9 +16,9 @@ return {
       terminal = {
         provider = "snacks",
         split_side = "left",
-        -- 33% to match the shell terminal's default; Option+[ / Option+] cycle it live
+        -- 50% to match the shell terminal's default; Option+[ / Option+] cycle it live
         -- (33/50/66) via the left-split resize keymaps in config/keymaps.lua.
-        split_width_percentage = 0.33,
+        split_width_percentage = 0.5,
         -- stack = false because util/sidebar places this window itself — snacks' own
         -- stacking would put Claude BELOW the shell, and it misfires entirely once this
         -- provider has recreated the window by hand. See the note in util/sidebar.lua.
