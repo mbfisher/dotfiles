@@ -42,6 +42,10 @@
 -- now, except taken against the live working tree so uncommitted changes are in it too. Fetching
 -- origin is slow on big repos, so it runs async (vim.system) behind a spinner notification rather
 -- than freezing the UI — same pattern as the PR picker action in plugins/snacks.lua.
+-- Paths intent-to-added by the most recent pr_diff() run, so DiffviewViewClosed below can
+-- unstage them again once the view is closed.
+local pr_diff_intent_to_add = {}
+
 local function pr_diff()
   local notif = "diffview-pr-diff"
   local done = false
@@ -106,6 +110,20 @@ local function pr_diff()
         return
       end
 
+      -- git diff (and diffview, which shells out to it) has no concept of "untracked" when
+      -- comparing to an arbitrary commit — only when comparing the index to the working tree —
+      -- so new files never show up here otherwise. Intent-to-add fakes tracking so they appear
+      -- as additions; DiffviewViewClosed below undoes it so `git status` isn't left polluted.
+      local untracked =
+        vim.system({ "git", "ls-files", "--others", "--exclude-standard" }, { text = true }):wait()
+      if untracked.code == 0 then
+        local files = vim.split(vim.trim(untracked.stdout), "\n", { trimempty = true })
+        if #files > 0 then
+          vim.system(vim.list_extend({ "git", "add", "--intent-to-add", "--" }, files)):wait()
+          pr_diff_intent_to_add = files
+        end
+      end
+
       finish("Diffing working tree against " .. base)
       vim.cmd("DiffviewOpen " .. vim.trim(mb.stdout))
     end)
@@ -153,6 +171,12 @@ return {
             end
           end
           pre_diffview_bufs = {}
+
+          -- Undo the intent-to-add staging pr_diff() used to surface untracked files (see there).
+          if #pr_diff_intent_to_add > 0 then
+            vim.system(vim.list_extend({ "git", "reset", "--" }, pr_diff_intent_to_add)):wait()
+            pr_diff_intent_to_add = {}
+          end
         end,
       })
     end,
