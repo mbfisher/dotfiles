@@ -62,8 +62,15 @@ local function is_panel_win(win)
   if sidebar.is_sidebar_win(win) then
     return true
   end
+  local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
+  -- Diffview's file panel and file-history panel are chrome around the diff, not a code window
+  -- either. Missing this let a buffer delete anywhere in the diffview tab pick the panel as the
+  -- "code" window and open the home screen into it, destroying the panel mid-review.
+  if ft == "DiffviewFiles" or ft == "DiffviewFileHistory" then
+    return true
+  end
   -- The dashboard is our own placeholder, not a panel: a file is meant to replace it.
-  if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "snacks_dashboard" then
+  if ft == "snacks_dashboard" then
     return false
   end
   return vim.w[win].snacks_win ~= nil
