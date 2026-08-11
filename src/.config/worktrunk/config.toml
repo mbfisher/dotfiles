@@ -1,3 +1,22 @@
+[pre-switch]
+# Never let a new worktree branch off a stale default branch. Before creating a branch,
+# fast-forward the primary worktree's default branch to its upstream, and FAIL LOUDLY
+# (aborting the create) if that's not possible — offline, or the local default branch has
+# diverged — rather than silently branching from a stale base. Skipped when switching to a
+# branch that already exists (nothing to freshen).
+fetch-default = '''
+  set -euo pipefail
+  if git show-ref --verify --quiet "refs/heads/{{ branch }}"; then
+    exit 0
+  fi
+  def="$(wt config state default-branch get)"
+  primary="$(git worktree list --porcelain | head -n1 | cut -d' ' -f2-)"
+  git -C "$primary" pull --ff-only origin "$def" || {
+    echo "pre-switch: refusing to create a worktree from a stale '$def' — could not fast-forward $primary to origin/$def (offline, or local '$def' has diverged). Resolve that, then retry." >&2
+    exit 1
+  }
+'''
+
 [pre-start]
 copy_mprocs = '''
   if [ -f "{{ repo_path }}/mprocs.yaml" ]; then
