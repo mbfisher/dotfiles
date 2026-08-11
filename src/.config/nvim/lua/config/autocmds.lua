@@ -38,6 +38,10 @@ end
 local function open_home_screen(win)
   local buf = vim.api.nvim_win_get_buf(win)
   local throwaway = vim.bo[buf].buftype == "" and not vim.bo[buf].modified and vim.fn.bufname(buf) == ""
+  -- Closing a diffview tab can land here before diffview's own teardown clears the 'winfixbuf' it
+  -- sets on its panel windows (see diffview/ui/panel.lua), racing this against the buffer delete
+  -- that triggered it. The home screen always gets to override, so clear it rather than fail.
+  vim.wo[win].winfixbuf = false
   -- pcall because this runs from a scheduled callback: an error thrown there leaves nvim sitting on a
   -- hit-enter prompt with no way to type at it (same reasoning as util/sidebar.lua's ensure_leftmost).
   local ok, err = pcall(Snacks.dashboard.open, { win = win, buf = throwaway and buf or nil })
