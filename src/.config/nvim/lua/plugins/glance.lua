@@ -9,17 +9,19 @@ return {
   {
     "dnlhc/glance.nvim",
     cmd = "Glance",
-    -- Spatial focus switch: list lives on the left, preview on the right, so
-    -- H jumps focus to the list and L to the preview. Safe to shadow the
-    -- normal-mode H/L (viewport top/bottom) because glance's mappings are
-    -- buffer-local to the peek windows. opts is a function so we can require
-    -- glance only when it's being loaded (cmd = "Glance" lazy-loads it).
+    -- Spatial focus switch: preview (code) renders on the left, list
+    -- (references) on the right, so H (like <S-h> "prev buffer") jumps left
+    -- into the preview and L (like <S-l> "next buffer") jumps right into the
+    -- list — matching the left/right muscle memory those keys already have.
+    -- Safe to shadow normal-mode H/L (viewport top/bottom) because glance's
+    -- mappings are buffer-local to the peek windows. opts is a function so we
+    -- can require glance only when it's being loaded (cmd = "Glance" lazy-loads it).
     opts = function()
       local actions = require("glance").actions
       return {
         mappings = {
-          list = { ["L"] = actions.enter_win("preview") },
-          preview = { ["H"] = actions.enter_win("list") },
+          list = { ["H"] = actions.enter_win("preview") },
+          preview = { ["L"] = actions.enter_win("list") },
         },
       }
     end,
