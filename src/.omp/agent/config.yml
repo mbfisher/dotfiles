@@ -1,0 +1,18 @@
+providers:
+  webSearchOrder:
+    []
+modelRoles:
+  default: cursor/gpt-5.6-sol
+symbolPreset: nerd
+composer:
+  shape: box
+theme:
+  dark: titanium
+  light: light
+setupVersion: 2
+spelling:
+  typoDetection: false
+  autocorrect: false
+  autocomplete: false
+dev:
+  autoqaConsent: granted

@@ -11,3 +11,6 @@ docs/superpowers/
 # Karabiner-generated daily backups of karabiner.json. Auto-regenerated, not
 # worth versioning.
 src/.config/karabiner/automatic_backups/
+
+# Runtime lock created while OMP updates its agent configuration.
+src/.omp/agent/config.yml.lock

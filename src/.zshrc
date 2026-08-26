@@ -1,5 +1,15 @@
 homebrew_prefix=$(brew --prefix)
 
+# Advertise a dark terminal palette to applications running inside Zellij.
+# OMP's macOS+Zellij fallback can consult the desktop appearance before its
+# OSC 11 background probe is available; because macOS is light while Ghostty
+# is fixed dark, it otherwise selects OMP's light theme and renders pale cards
+# on the dark terminal. COLORFGBG=15;0 means light foreground, dark background.
+# Keep this scoped to Zellij so direct Ghostty sessions use normal detection.
+if [[ -n "$ZELLIJ" ]]; then
+  export COLORFGBG="15;0"
+fi
+
 # Guard against ZELLIJ_SESSION_NAME getting out of sync (see issues/002).
 #
 # ZELLIJ_SESSION_NAME can become stale for two reasons:
