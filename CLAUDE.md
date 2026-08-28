@@ -57,4 +57,6 @@ between the Ghostty and nvim configs, and Ghostty setting no colours at all is d
 
 ## Peripherals
 
-I use a Keychron K3 Max keyboard and Keychron M6 mouse. They need some custom configuration for my setup. See src/.config/karabiner/README.md
+At home, a Keychron K3 Max keyboard follows the MacBook/PC KVM, while each computer has its own mouse.
+At the office, separate Bluetooth keyboard and mouse peripherals connect directly to the MacBook.
+See the root README for the full topology and `src/.config/karabiner/README.md` for the macOS keyboard setup.
