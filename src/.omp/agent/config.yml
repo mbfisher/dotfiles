@@ -16,3 +16,8 @@ spelling:
   autocomplete: false
 dev:
   autoqaConsent: granted
+statusLine:
+  compactThinkingLevel: false
+hideThinkingBlock: true
+display:
+  hideToolActivity: true

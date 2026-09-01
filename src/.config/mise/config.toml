@@ -10,6 +10,8 @@ node = "22.12"
 go = "latest"
 ruby = "3.4.9"
 "github:can1357/oh-my-pi" = "latest"
+"npm:@openai/codex" = "latest"
+herdr = "latest"
 
 [env]
 # Make lazygit use this as it's config directory base
