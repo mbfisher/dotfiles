@@ -170,6 +170,19 @@ keybinds clear-defaults=true {
         // Trade-off: if you trigger these while focused on claude itself, focus lands on nvim.
         // bind "Alt [" { MoveFocus "left"; Resize "Decrease"; MoveFocus "right"; }
         // bind "Alt ]" { MoveFocus "left"; Resize "Increase"; MoveFocus "right"; }
+        // Toggle Ghostty, Zellij's indexed ANSI chrome, and nvim together. The short-lived
+        // borderless float avoids disturbing the current pane layout.
+        bind "Alt Shift t" {
+            Run "terminal-theme" {
+                floating true
+                borderless true
+                close_on_exit true
+                x "45%"
+                y "45%"
+                width "10%"
+                height "10%"
+            }
+        }
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Ctrl g" { SwitchToMode "locked"; }
         bind "Alt h" { MoveFocusOrTab "left"; }
@@ -314,7 +327,10 @@ web_client {
 // Choose the theme that is specified in the themes section.
 // Default: default
 // 
-// theme "dracula"
+// Preserve the terminal's ANSI-driven chrome in dark mode. Light mode uses truecolour
+// Flexoki values so a running Zellij session does not retain Ghostty's old bright green.
+theme_dark "ansi"
+theme_light "flexoki-light"
  
 // Choose the base input mode of zellij.
 // Default: normal

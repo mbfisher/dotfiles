@@ -1,70 +1,128 @@
--- Two colour schemes are in use across these dotfiles, and this file defines the nvim half of both.
--- Full rationale, measurements and the list of every place colours are set: docs/colours.md.
---
---   TERMINAL — Ghostty's built-in default. Every shell, inside nvim or out, plus Claude Code.
---   EDITOR   — onedark 'dark' with exactly one change: a lighter body foreground.
---
--- Claude Code belongs to neither: it emits hardcoded truecolor RGB, so it looks the same in both
--- and takes only its default fg/bg from the terminal scheme.
+-- `terminal-theme` switches the entire terminal stack between these two schemes. Ghostty reads the
+-- same state file directly; nvim reads it because Zellij does not reliably forward OSC background
+-- queries. Full rationale and every place colours are set: docs/colours.md.
+local theme_file = vim.fn.expand("~/.config/ghostty/theme.conf")
 
--- Ghostty's built-in default scheme, mirrored so terminal buffers inside nvim render exactly as
--- they do in a bare pane — nvim renders ANSI through g:terminal_color_*, and onedark would
--- otherwise fill those from its own, more saturated palette.
--- Source of truth is `ghostty +show-config --default`: the Ghostty config deliberately sets no
--- colours, so these ARE the live values. Setting a Ghostty theme means updating these too.
-local terminal_scheme = {
-  bg = "#282c34", -- One Dark's background, not Tomorrow Night's #1d1f21
-  fg = "#ffffff", -- pure white, not Tomorrow Night's #c5c8c6
-  -- Tomorrow Night for the normal colours, Tomorrow Night Bright for the brights.
-  ansi = {
-    "#1d1f21", "#cc6666", "#b5bd68", "#f0c674", "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6",
-    "#666666", "#d54e53", "#b9ca4a", "#e7c547", "#7aa6da", "#c397d8", "#70c0b1", "#eaeaea",
+local terminal_schemes = {
+  dark = {
+    bg = "#282c34",
+    fg = "#ffffff",
+    ansi = {
+      "#1d1f21", "#cc6666", "#b5bd68", "#f0c674", "#81a2be", "#b294bb", "#8abeb7", "#c5c8c6",
+      "#666666", "#d54e53", "#b9ca4a", "#e7c547", "#7aa6da", "#c397d8", "#70c0b1", "#eaeaea",
+    },
+  },
+  light = {
+    bg = "#fffcf0",
+    fg = "#100f0f",
+    ansi = {
+      "#100f0f", "#af3029", "#66800b", "#ad8301", "#205ea6", "#a02f6f", "#24837b", "#6f6e69",
+      "#b7b5ac", "#d14d41", "#879a39", "#d0a215", "#4385be", "#ce5d97", "#3aa99f", "#cecdc3",
+    },
   },
 }
 
-local editor_scheme = {
-  style = "dark",
-  -- Body text only. Perceptual midpoint (CIELAB, so it keeps onedark's cool grey tint) between
-  -- onedark's own #abb2bf, which washes out in languages like Go where most of the screen is
-  -- unstyled identifiers, and the terminal scheme's pure white, which is too hot at that volume.
-  -- Nudge along the same line: #c0c5cf / #ccd0d8 / #dde0e5 / #eaebef.
-  -- Accents are deliberately stock: onedark's blue carries 2.12x the chroma of Ghostty's and its
-  -- purple 2.52x, and that colourfulness is the reason to run a different scheme for code at all.
-  fg = "#d4d8df",
+local editor_schemes = {
+  dark = {
+    style = "dark",
+    colors = {
+      bg0 = "#282c34",
+      bg1 = "#31353f",
+      bg2 = "#393f4a",
+      bg3 = "#3b3f4c",
+      bg_d = "#21252b",
+      fg = "#d4d8df",
+    },
+  },
+  light = {
+    style = "light",
+    -- Keep onedark's readable syntax accents, but replace its neutral greys with Flexoki's warm
+    -- paper scale so the editor and surrounding terminal read as one surface.
+    colors = {
+      bg0 = "#fffcf0",
+      bg1 = "#f2f0e5",
+      bg2 = "#e6e4d9",
+      bg3 = "#cecdc3",
+      bg_d = "#dad8ce",
+      fg = "#343331",
+    },
+  },
 }
+
+local function read_style()
+  local file = io.open(theme_file, "r")
+  if not file then
+    return "dark"
+  end
+  local content = file:read("*a") or ""
+  file:close()
+  return content:match("theme%s*=%s*Flexoki Light") and "light" or "dark"
+end
+
+local function onedark_opts(style)
+  local scheme = editor_schemes[style]
+  return { style = scheme.style, colors = scheme.colors }
+end
+
+local function apply_terminal_scheme(style)
+  local scheme = terminal_schemes[style]
+  for i, hex in ipairs(scheme.ansi) do
+    vim.g["terminal_color_" .. (i - 1)] = hex
+  end
+  vim.api.nvim_set_hl(0, "TerminalNormal", { fg = scheme.fg, bg = scheme.bg })
+  vim.api.nvim_set_hl(0, "TerminalWinSeparator", { fg = scheme.fg, bg = scheme.bg })
+end
+
+local function apply_style(style)
+  vim.api.nvim_set_option_value("background", style, {})
+  require("onedark").setup(onedark_opts(style))
+
+  -- onedark's colour-dependent modules capture the palette when first required. Evict them so
+  -- switching style in a running process computes highlights from the new palette.
+  package.loaded["onedark.colors"] = nil
+  package.loaded["onedark.highlights"] = nil
+  package.loaded["onedark.terminal"] = nil
+
+  require("onedark").load()
+  apply_terminal_scheme(style)
+end
 
 return {
   {
     "navarasu/onedark.nvim",
     lazy = false,
     priority = 1000,
-    opts = { style = editor_scheme.style, colors = { fg = editor_scheme.fg } },
+    opts = function()
+      return onedark_opts(read_style())
+    end,
     config = function(_, opts)
+      local style = read_style()
+      vim.api.nvim_set_option_value("background", style, {})
       require("onedark").setup(opts)
       require("onedark").load()
 
-      -- Apply the terminal scheme to anything in nvim that hosts a terminal:
-      --   * g:terminal_color_* so ANSI output matches a bare Ghostty pane.
-      --   * TerminalNormal for the panes' own fg/bg. snacks would otherwise map them to
-      --     SnacksNormal -> onedark's NormalFloat (bg1 #31353f), lighter than the surrounding
-      --     background. Wired up by styles.terminal in snacks.lua.
-      --   * TerminalWinSeparator so the terminal/code edge is visible at all — onedark's
-      --     WinSeparator is #3b3f4c, about 1.2:1. The left window owns a vertical separator column
-      --     and the terminals always sit on the left, so code-to-code splits keep onedark's.
-      -- Held in the terminal scheme's own values rather than read from the active colorscheme: a
-      -- terminal should look like Ghostty whichever scheme the editor is using. Re-applied on
-      -- ColorScheme, which clears custom groups and re-runs onedark's own terminal_color_* pass.
-      -- Note a plain `:terminal` (not opened via snacks) misses TerminalNormal and falls back to
-      -- onedark's Normal, so its body text is the editor foreground rather than white.
-      local function apply_terminal_scheme()
-        for i, hex in ipairs(terminal_scheme.ansi) do
-          vim.g["terminal_color_" .. (i - 1)] = hex
-        end
-        vim.api.nvim_set_hl(0, "TerminalNormal", { fg = terminal_scheme.fg, bg = terminal_scheme.bg })
-        vim.api.nvim_set_hl(0, "TerminalWinSeparator", { fg = terminal_scheme.fg, bg = terminal_scheme.bg })
+      apply_terminal_scheme(style)
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        callback = function()
+          apply_terminal_scheme(read_style())
+        end,
+      })
+
+      local signal = vim.uv.new_signal()
+      if signal then
+        signal:start("sigusr1", function()
+          vim.schedule(function()
+            apply_style(read_style())
+          end)
+        end)
+        vim.api.nvim_create_autocmd("VimLeavePre", {
+          once = true,
+          callback = function()
+            signal:stop()
+            signal:close()
+          end,
+        })
       end
-      apply_terminal_scheme()
-      vim.api.nvim_create_autocmd("ColorScheme", { callback = apply_terminal_scheme })
     end,
   },
 

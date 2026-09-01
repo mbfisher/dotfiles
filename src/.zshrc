@@ -1,13 +1,16 @@
 homebrew_prefix=$(brew --prefix)
 
-# Advertise a dark terminal palette to applications running inside Zellij.
-# OMP's macOS+Zellij fallback can consult the desktop appearance before its
-# OSC 11 background probe is available; because macOS is light while Ghostty
-# is fixed dark, it otherwise selects OMP's light theme and renders pale cards
-# on the dark terminal. COLORFGBG=15;0 means light foreground, dark background.
-# Keep this scoped to Zellij so direct Ghostty sessions use normal detection.
+# Advertise the active terminal palette to applications running inside Zellij.
+# OMP's OSC 11 probe is not always available through Zellij, so it falls back
+# to COLORFGBG. Keep this in sync with terminal-theme's runtime state:
+# the final component is the background (0 dark, 15 light).
 if [[ -n "$ZELLIJ" ]]; then
-  export COLORFGBG="15;0"
+  if [[ -f "$HOME/.config/ghostty/theme.conf" ]] &&
+    [[ "$(<"$HOME/.config/ghostty/theme.conf")" == *"theme = Flexoki Light"* ]]; then
+    export COLORFGBG="0;15"
+  else
+    export COLORFGBG="15;0"
+  fi
 fi
 
 # Guard against ZELLIJ_SESSION_NAME getting out of sync (see issues/002).
@@ -298,6 +301,7 @@ _tmux_enter() {
 ws() {
   local main="$PWD"
   # Try switching to existing worktree; if it doesn't exist, create one.
+
   # If the branch exists on the remote, fetch it and use it as the base
   # so the local branch tracks the remote (e.g. for existing PRs).
   if ! wt switch $1 2>/dev/null; then
@@ -354,4 +358,3 @@ if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/mbfisher/.lmstudio/bin"
 # End of LM Studio CLI section
-
