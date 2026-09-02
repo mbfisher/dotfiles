@@ -10,11 +10,15 @@ are available when an explicit action is clearer.
 | **Zellij chrome** | ANSI palette | Flexoki Light UI theme |
 | **nvim code** | onedark `dark`, lighter body text | onedark `light`, Flexoki paper scale |
 | **nvim terminal buffers** | Ghostty dark palette mirror | Flexoki Light palette mirror |
+| **Claude Code** | watched custom theme based on dark | watched custom theme based on light |
+| **OMP** | watched custom Titanium palette | watched custom light palette |
 
 `terminal-theme` writes the gitignored `~/.config/ghostty/theme.conf`, reloads Ghostty, switches the
-current Zellij session, and sends `SIGUSR1` to running nvim processes. Zellij keeps the ANSI-driven
-theme in dark mode, while its explicit Flexoki Light theme avoids retaining stale dark-session ANSI
-colours. The selected tab uses muted olive `#879a39`; focused pane titles use green `#66800b`.
+theme in every running Zellij session, and sends `SIGUSR1` to running nvim processes. It also
+atomically replaces Claude Code's and OMP's watched `terminal-stack.json` files with their selected
+tracked templates. Zellij keeps the ANSI-driven theme in dark mode, while its explicit Flexoki Light
+theme avoids retaining stale dark-session ANSI colours. The selected tab uses muted olive `#879a39`;
+focused pane titles use green `#66800b`.
 
 ## Dark terminal scheme
 
@@ -77,19 +81,27 @@ near-black (`#100f0f`) to match bare Ghostty panes.
 
 | File | Sets | Notes |
 |---|---|---|
-| `src/bin/terminal-theme` | active state | Writes the runtime include, reloads Ghostty, and signals nvim. |
+| `src/bin/terminal-theme` | active state | Updates Ghostty, Claude Code, OMP, every Zellij session, and nvim. |
 | `src/.config/ghostty/config` | runtime include | Loads the generated `theme.conf`; absence means dark. |
 | `src/.config/nvim/lua/plugins/colorscheme.lua` | both scheme mirrors | Switches on `SIGUSR1`; terminal palettes match Ghostty. |
 | `src/.config/nvim/lua/plugins/snacks.lua` | nothing | `styles.terminal`'s `winhighlight` points terminal panes at the group names only. |
+| `src/.claude/theme-templates/*.json` | Claude Code theme pair | Copied over the gitignored watched `themes/terminal-stack.json`. |
+| `src/.omp/agent/theme-templates/*.json` | OMP theme pair | Copied over the gitignored watched `themes/terminal-stack.json`. |
 | `src/.config/zellij/config.kdl` | theme pair and toggle key | Dark uses `ansi`; light uses `flexoki-light`. |
 | `src/.config/zellij/themes/flexoki-light.kdl` | light Zellij UI | Defines title, ribbon, frame, and plugin colours. |
 
 ## Gotchas
 
-- **Claude Code can't be themed.** It emits hardcoded truecolor RGB (`#d77757` terracotta, `#ffc107`
-  amber, `#b1b9f9` periwinkle, `#4eba65` green, `#999999` grey) — 46 truecolor sequences and zero
-  indexed ANSI in a captured session. Only its default text follows the terminal scheme, which is
-  why it looks identical inside nvim and out.
+- **Claude Code must switch its own theme.** Its message backgrounds and accents are truecolour
+  tokens, so changing Ghostty's ANSI palette cannot recolour them. Both modes point at one watched
+  custom theme whose base is replaced by `terminal-theme`. After first installing this setup,
+  restart existing Claude Code sessions once so they load and begin watching that custom file.
+- **Every Zellij session must be addressed separately.** `zellij action` only changes one session,
+  so `terminal-theme` enumerates the running sessions and applies the selected mode to each.
+- **OMP cannot auto-detect a terminal-only switch inside Zellij.** Zellij intercepts OMP's OSC 11
+  background query, while `COLORFGBG` is fixed at process startup. Both OMP theme slots therefore
+  point to the same watched custom file, and `terminal-theme` replaces its contents. After first
+  installing this setup, restart existing OMP sessions once so they begin watching that file.
 - **nvim terminals need the mirror.** Terminal buffers render ANSI through `g:terminal_color_*`, and
   onedark fills those from its own palette. Without the mirror, `ls` inside nvim is visibly punchier
   than the same command in a bare pane.

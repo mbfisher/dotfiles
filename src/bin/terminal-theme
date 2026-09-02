@@ -3,6 +3,13 @@
 set -euo pipefail
 
 THEME_FILE="${HOME}/.config/ghostty/theme.conf"
+CLAUDE_SETTINGS="${HOME}/.claude/settings.json"
+CLAUDE_THEME_DIR="${HOME}/.claude/themes"
+CLAUDE_THEME_TEMPLATE_DIR="${HOME}/.claude/theme-templates"
+CLAUDE_THEME_FILE="${CLAUDE_THEME_DIR}/terminal-stack.json"
+OMP_THEME_DIR="${HOME}/.omp/agent/themes"
+OMP_THEME_TEMPLATE_DIR="${HOME}/.omp/agent/theme-templates"
+OMP_THEME_FILE="${OMP_THEME_DIR}/terminal-stack.json"
 LIGHT_THEME="Flexoki Light"
 
 current_theme() {
@@ -35,6 +42,40 @@ case "$target" in
     ;;
 esac
 
+claude_template="${CLAUDE_THEME_TEMPLATE_DIR}/${target}.json"
+if [[ ! -f "$claude_template" ]]; then
+  printf 'Claude Code theme template is missing: %s\n' "$claude_template" >&2
+  exit 1
+fi
+
+omp_template="${OMP_THEME_TEMPLATE_DIR}/${target}.json"
+if [[ ! -f "$omp_template" ]]; then
+  printf 'OMP theme template is missing: %s\n' "$omp_template" >&2
+  exit 1
+fi
+
+# Claude Code watches the active custom theme file, while changes to the built-in theme
+# preference only affect new sessions. Keep one custom theme selected and replace its base
+# so every running Claude session that has loaded this setup repaints immediately.
+mkdir -p "$CLAUDE_THEME_DIR"
+claude_theme_tmp="$(mktemp "${CLAUDE_THEME_FILE}.tmp.XXXXXX")"
+trap 'rm -f "$claude_theme_tmp"' EXIT
+cp "$claude_template" "$claude_theme_tmp"
+chmod 0644 "$claude_theme_tmp"
+mv "$claude_theme_tmp" "$CLAUDE_THEME_FILE"
+trap - EXIT
+
+# OMP cannot detect a Ghostty palette change through Zellij: OSC 11 is intercepted and
+# COLORFGBG is fixed when the process starts. It does watch active custom theme files, so
+# replace one shared theme in place to repaint every running OMP session.
+mkdir -p "$OMP_THEME_DIR"
+omp_tmp="$(mktemp "${OMP_THEME_FILE}.tmp.XXXXXX")"
+trap 'rm -f "$omp_tmp"' EXIT
+cp "$omp_template" "$omp_tmp"
+chmod 0644 "$omp_tmp"
+mv "$omp_tmp" "$OMP_THEME_FILE"
+trap - EXIT
+
 tmp="$(mktemp "${THEME_FILE}.tmp.XXXXXX")"
 trap 'rm -f "$tmp"' EXIT
 
@@ -49,15 +90,39 @@ trap 'rm -f "$tmp"' EXIT
 mv "$tmp" "$THEME_FILE"
 trap - EXIT
 
+if command -v jq >/dev/null 2>&1; then
+  mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
+  claude_tmp="$(mktemp "${CLAUDE_SETTINGS}.tmp.XXXXXX")"
+  if [[ -f "$CLAUDE_SETTINGS" ]]; then
+    jq '.theme = "custom:terminal-stack"' "$CLAUDE_SETTINGS" >"$claude_tmp"
+    chmod "$(stat -f '%Lp' "$CLAUDE_SETTINGS")" "$claude_tmp"
+  else
+    jq -n '{theme: "custom:terminal-stack"}' >"$claude_tmp"
+  fi
+  mv "$claude_tmp" "$CLAUDE_SETTINGS"
+else
+  printf 'Claude Code theme unchanged: jq is not installed.\n' >&2
+fi
+
 if ! osascript \
+  -e 'with timeout of 3 seconds' \
   -e 'tell application "System Events" to tell process "Ghostty"' \
   -e 'click menu item "Reload Configuration" of menu "Ghostty" of menu bar 1' \
-  -e 'end tell' >/dev/null 2>&1; then
+  -e 'end tell' \
+  -e 'end timeout' >/dev/null 2>&1; then
   printf 'Theme saved. Press Cmd+Shift+R in Ghostty to apply it.\n' >&2
 fi
 
-if [[ -n "${ZELLIJ:-}" ]]; then
-  zellij action "set-${target}-theme" >/dev/null 2>&1 || true
+if command -v zellij >/dev/null 2>&1; then
+  while IFS= read -r session_line; do
+    [[ "$session_line" == *"(EXITED"* ]] && continue
+    session="${session_line%% *}"
+    [[ -n "$session" ]] || continue
+    if ! env -u ZELLIJ_PANE_ID ZELLIJ_SESSION_NAME="$session" \
+      zellij action "set-${target}-theme" >/dev/null 2>&1; then
+      printf 'Zellij theme unchanged for session: %s\n' "$session" >&2
+    fi
+  done < <(zellij list-sessions --no-formatting 2>/dev/null || true)
 fi
 
 # onedark does not infer Ghostty's palette through Zellij reliably, so nudge every running nvim

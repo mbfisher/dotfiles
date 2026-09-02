@@ -7,8 +7,11 @@ symbolPreset: nerd
 composer:
   shape: box
 theme:
-  dark: titanium
-  light: light
+  # Both slots intentionally use one custom theme. `terminal-theme` replaces
+  # that watched file so live OMP sessions do not depend on Zellij's broken
+  # OSC 11 passthrough or the process's startup-only COLORFGBG value.
+  dark: terminal-stack
+  light: terminal-stack
 setupVersion: 2
 spelling:
   typoDetection: false
