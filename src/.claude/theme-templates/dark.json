@@ -1,5 +1,12 @@
 {
   "name": "Terminal Stack",
   "base": "dark",
-  "overrides": {}
+  "overrides": {
+    "diffAdded": "#31392b",
+    "diffRemoved": "#382b2c",
+    "diffAddedDimmed": "#2c3328",
+    "diffRemovedDimmed": "#322728",
+    "diffAddedWord": "#435439",
+    "diffRemovedWord": "#563739"
+  }
 }
