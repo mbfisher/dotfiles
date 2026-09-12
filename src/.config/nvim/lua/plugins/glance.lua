@@ -4,7 +4,24 @@
 -- mappings don't win because LazyVim sets these buffer-locally in its LSP
 -- on_attach; the canonical override is to extend its LSP keymap list, which
 -- dedupes by lhs and replaces the action.
--- gD (declaration) is left alone — glance has no equivalent command.
+-- Reuse Neotest's public window picker so `i` has the same labelled A/B/C prompt as its summary.
+-- Glance closes its floats before running cmd, leaving only the real code windows to choose from.
+local function jump_with_window_picker(actions)
+  return function()
+    actions.jump({
+      cmd = function(item)
+        local bufnr = item.bufnr
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          bufnr = vim.fn.bufadd(item.filename)
+          vim.fn.bufload(bufnr)
+        end
+        vim.bo[bufnr].buflisted = true
+        require("neotest.lib").ui.open_buf(bufnr, item.start_line, item.start_col)
+      end,
+    })
+  end
+end
+
 return {
   {
     "dnlhc/glance.nvim",
@@ -20,7 +37,10 @@ return {
       local actions = require("glance").actions
       return {
         mappings = {
-          list = { ["H"] = actions.enter_win("preview") },
+          list = {
+            ["H"] = actions.enter_win("preview"),
+            ["i"] = jump_with_window_picker(actions),
+          },
           preview = { ["L"] = actions.enter_win("list") },
         },
       }
