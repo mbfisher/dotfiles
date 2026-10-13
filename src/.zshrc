@@ -8,9 +8,17 @@ if [[ -n "$ZELLIJ" ]]; then
   if [[ -f "$HOME/.config/ghostty/theme.conf" ]] &&
     [[ "$(<"$HOME/.config/ghostty/theme.conf")" == *"theme = Flexoki Light"* ]]; then
     export COLORFGBG="0;15"
+    _terminal_theme=light
   else
     export COLORFGBG="15;0"
+    _terminal_theme=dark
   fi
+  # New sessions otherwise start in theme_light: a fresh Ghostty tab answers Zellij's colour
+  # scheme query with its built-in "light" default before window-theme is applied, and the
+  # later dark update never reaches Zellij. Re-assert the terminal-theme state in the
+  # background, after that startup report has landed.
+  ( sleep 0.5; zellij action "set-${_terminal_theme}-theme" ) >/dev/null 2>&1 &!
+  unset _terminal_theme
 fi
 
 # Guard against ZELLIJ_SESSION_NAME getting out of sync (see issues/002).
