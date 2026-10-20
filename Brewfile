@@ -5,7 +5,6 @@ brew "jq"
 brew "ncdu" # show disk usage in a directory - good for cleaning up large caches
 brew "neovim"
 brew "ripgrep"
-brew "teamtype" # peer-to-peer collaborative editing, used by teamtype-nvim
 brew "tmux"
 cask "ghostty"
 cask "notion"
