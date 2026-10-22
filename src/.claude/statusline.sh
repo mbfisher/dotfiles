@@ -194,7 +194,6 @@ CONTEXT_STR="${PCT_COLOR}${CONTEXT_PCT}%${R} ${ABS_COLOR}${CURRENT_TOKENS_FORMAT
 # a cache file and kick off a detached background refresh when it goes stale.
 # The "today" figure can therefore lag by up to CACHE_MAX_AGE seconds.
 COST_CACHE="$HOME/.claude/daily-cost-cache"
-COST_LOCK="$HOME/.claude/daily-cost-cache.lock"
 CACHE_MAX_AGE=60
 
 DAILY_COST=""
@@ -205,8 +204,11 @@ if [ -f "$COST_CACHE" ]; then
   mtime=$(stat -f %m "$COST_CACHE" 2>/dev/null || echo 0)
   [ $(( $(date +%s) - mtime )) -lt $CACHE_MAX_AGE ] && stale=0
 fi
-# Refresh in the background only when stale and no refresh is already running.
-if [ $stale -eq 1 ] && [ ! -d "$COST_LOCK" ]; then
+# Refresh in the background when stale. Don't gate on the lock dir here: the
+# refresh script owns the lock, bails instantly if one is held, and is the only
+# thing that clears a stale one. Gating here meant a lock left behind by a
+# killed run blocked every future refresh, freezing the figure for weeks.
+if [ $stale -eq 1 ]; then
   nohup "$HOME/.claude/refresh-daily-cost.sh" >/dev/null 2>&1 &
   disown 2>/dev/null
 fi
