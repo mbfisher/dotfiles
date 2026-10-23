@@ -2,18 +2,11 @@ return {
   {
     "akinsho/bufferline.nvim",
     opts = function(_, opts)
-      -- Keep the buffer tabs over the CODE half of the screen rather than spanning the sidebar too.
-      -- The tabline is inherently full width, but an offset reserves the left portion for a sidebar
-      -- window and draws it in that window's own background, so the tabs start where the code window
-      -- does. LazyVim already does this for the snacks explorer (snacks_layout_box); both sidebar
-      -- terminals — the <C-/> shell and the Claude Code split — are filetype snacks_terminal.
-      -- One entry covers every case: bufferline takes the width from the TOPMOST window of a split
-      -- column, so it works for Claude alone, the shell alone, and the two stacked.
+      -- Keep the buffer tabs over the code window rather than spanning the <C-/> shell's left split
+      -- too (filetype snacks_terminal), as LazyVim already does for the explorer. Painting the offset
+      -- in BufferLineFill keeps the bar reading as one full-width strip instead of a hole above the
+      -- terminal.
       opts.options.offsets = opts.options.offsets or {}
-      -- ...but tabs are the OUTER unit — the sidebar lives inside a tab — so the bar should still
-      -- read as one strip spanning the full width. Painting the offset in BufferLineFill (rather
-      -- than letting bufferline guess the sidebar window's own background) does that: the reserved
-      -- section looks like empty tabline instead of a hole above the terminal.
       table.insert(opts.options.offsets, { filetype = "snacks_terminal", highlight = "BufferLineFill" })
 
       -- bufferline's own auto-toggle counts only listed BUFFERS, and it re-runs from the tabline

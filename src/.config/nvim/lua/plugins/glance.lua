@@ -23,7 +23,7 @@ local function jump_with_window_picker(actions)
 end
 
 -- Open in the split beside the current one, only creating a vsplit when there isn't one. Glance's own `v` always
--- splits, so repeated peeks pile up windows. Neighbours that aren't normal file buffers (e.g. the Claude terminal)
+-- splits, so repeated peeks pile up windows. Neighbours that aren't normal file buffers (e.g. a terminal)
 -- are skipped. Glance runs cmd from the original code window and then loads the item into whichever window is current.
 local function jump_opposite_vsplit(actions)
   return function()

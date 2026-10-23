@@ -9,11 +9,8 @@
 
 -- Fall back to the LazyVim home screen (the snacks dashboard) whenever no work is left open, the same
 -- as a fresh `nvim` with no file. Closing the last buffer used to leave an empty unnamed buffer, and —
--- if Claude Code or the shell terminal were open — nothing at all: the sidebar column filled the
--- screen with nowhere to open a file from, and neither terminal can be hidden to make room because
--- nvim won't close the last window (claudecode's hide is a no-op on E444, and snacks' fallback splits
--- and re-shows the same buffer). Recreating the window also drops you out of terminal insert mode.
-local sidebar = require("util.sidebar")
+-- if the shell terminal or explorer were open — nothing at all: the panel filled the screen with
+-- nowhere to open a file from.
 
 --- The listed, named buffer used most recently, or nil when no real file is open at all. Terminals and
 --- the dashboard are unlisted scratch buffers, and a fresh `:enew` buffer is listed but unnamed, so
@@ -56,25 +53,21 @@ local function open_home_screen(win)
   -- that triggered it. The home screen always gets to override, so clear it rather than fail.
   vim.wo[win].winfixbuf = false
   -- pcall because this runs from a scheduled callback: an error thrown there leaves nvim sitting on a
-  -- hit-enter prompt with no way to type at it (same reasoning as util/sidebar.lua's ensure_leftmost).
+  -- hit-enter prompt with no way to type at it.
   local ok, err = pcall(Snacks.dashboard.open, { win = win, buf = throwaway and buf or nil })
   if not ok then
     vim.notify("home screen: " .. tostring(err), vim.log.levels.WARN)
   end
 end
 
---- Does `win` (non-floating) hold a panel rather than code? The two sidebar terminals, the <leader>e
---- explorer, a picker list — anything sharing the screen with the code window rather than being it.
---- Keyed off w:snacks_win, which every window snacks owns carries and a plain split never does: it has
---- to cover panels this config doesn't place itself, not just the sidebar. Recognising only the sidebar
---- put the home screen on top of the explorer, whose layout tore the window down again and re-triggered
---- this — an error loop that needed a force-quit. See issues/005, "the explorer is not the code window".
+--- Does `win` (non-floating) hold a panel rather than code? The shell terminal, the <leader>e explorer,
+--- a picker list — anything sharing the screen with the code window rather than being it. Keyed off
+--- w:snacks_win, which every window snacks owns carries and a plain split never does. Putting the home
+--- screen on top of the explorer made its layout tear the window down again and re-trigger this — an
+--- error loop that needed a force-quit.
 ---@param win integer
 ---@return boolean
 local function is_panel_win(win)
-  if sidebar.is_sidebar_win(win) then
-    return true
-  end
   local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
   -- Diffview's file panel and file-history panel are chrome around the diff, not a code window
   -- either. Missing this let a buffer delete anywhere in the diffview tab pick the panel as the
@@ -134,12 +127,11 @@ local function fill_empty_screen(closed_buf)
   if panels == 0 or (not file and home_screen_shown()) then
     return
   end
-  -- Nothing but panels left. Make room on the right, focused, and hand the column its width back.
+  -- Nothing but panels left. Make room on the right, focused.
   -- `vsplit` rather than `vnew`: vnew's empty buffer is listed, so it lingers in the bufferline as a
   -- stray [No Name] as soon as something replaces it in the window.
   vim.cmd("botright vsplit")
   code_win = vim.api.nvim_get_current_win()
-  sidebar.restore_width()
   -- Files still open (the window was closed, not the buffers) means the home screen is the wrong
   -- answer: show the most recent one, so <S-h> / <S-l> can cycle from a real position again.
   if file then

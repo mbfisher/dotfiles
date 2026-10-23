@@ -165,25 +165,12 @@ return {
     end,
     ---@type snacks.Config
     opts = {
-      terminal = {
-        win = {
-          keys = {
-            -- LazyVim maps <C-/> and <C-_> BUFFER-LOCALLY in every snacks terminal to hide THAT
-            -- terminal (hide_slash / hide_underscore, lazyvim/plugins/util.lua). Buffer-local wins
-            -- over the global map, so pressing <C-/> inside the Claude Code split hid Claude
-            -- instead of toggling the shell terminal. Dropping them leaves the global keymaps in
-            -- charge from anywhere: <C-/> always means the shell, <C-;> always means Claude.
-            hide_slash = false,
-            hide_underscore = false,
-          },
-        },
-      },
       styles = {
-        -- Put every snacks terminal (the <C-/> shell and the Claude Code split) on the terminal
-        -- colour scheme via TerminalNormal, which colorscheme.lua defines from Ghostty's own
-        -- values — see docs/colours.md. Without this they inherit SnacksNormal -> onedark
-        -- NormalFloat (bg1, lighter than the terminal's own background), which made Claude look
-        -- washed out. No colours here, only group names.
+        -- Put every snacks terminal (e.g. the <C-/> shell) on the terminal colour scheme via
+        -- TerminalNormal, which colorscheme.lua defines from Ghostty's own values — see
+        -- docs/colours.md. Without this they inherit SnacksNormal -> onedark NormalFloat (bg1,
+        -- lighter than the terminal's own background), which looks washed out. No colours here,
+        -- only group names.
         -- The whole winhighlight string replaces snacks' default, so the non-Normal mappings are
         -- repeated verbatim from snacks' win defaults to keep winbar/border styling intact.
         terminal = {

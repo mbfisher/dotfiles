@@ -50,69 +50,25 @@ vim.keymap.set("n", "<leader>fY", function()
   vim.notify(p)
 end, { desc = "Yank absolute path" })
 
--- Toggle a persistent shell terminal in the LEFT SIDEBAR COLUMN, sharing it with the
--- Claude Code split (<C-;>): the shell takes the bottom half when Claude is open, the
--- full column height when it isn't. Layout and persistence details live in util/sidebar.
--- Overrides LazyVim's <C-/> (and <C-_>, what some terminals send for it), which opens
--- a bottom horizontal split — never wanted here. LazyVim's floating terminals are
--- untouched on <leader>ft / <leader>fT.
-local sidebar = require("util.sidebar")
-vim.keymap.set({ "n", "t" }, "<C-/>", sidebar.toggle_shell, { desc = "Terminal (left split)" })
-vim.keymap.set({ "n", "t" }, "<C-_>", sidebar.toggle_shell, { desc = "which_key_ignore" })
-
--- Option+] / Option+[ cycle the left split (shell / Claude Code) through fixed widths:
--- 33-66 -> 50-50 (the default) -> 66-33. Steps clamp at each end rather than wrapping, so
--- holding one key can't overshoot back to the other extreme.
--- Took over from the zellij "Alt [" / "Alt ]" pane-resize binds — claude is an nvim window
--- now, not a zellij pane. Ghostty sends these as CSI u text (see ghostty/config) so they reach
--- nvim through zellij; mapped in terminal mode too, so they work while typing at the Claude prompt.
--- Both halves of the column share its width, so resizing either one resizes the column.
-local sidebar_steps = { 0.33, 0.5, 0.66 }
-
----@param widen boolean true to widen the left split, false to narrow it
-local function cycle_sidebar_width(widen)
-  return function()
-    local win = sidebar.win()
-    if not win then
-      return
-    end
-    -- Step to the next size PAST the current width rather than indexing a remembered step:
-    -- after a manual drag to ~45% this lands on 50%, and it can't get out of sync with the
-    -- window's real width. The 0.02 tolerance absorbs the ±1 column rounding, so a width
-    -- that's already on a step steps off it instead of re-selecting itself.
-    local frac = vim.api.nvim_win_get_width(win) / vim.o.columns
-    local target = sidebar_steps[widen and #sidebar_steps or 1] -- clamp at the ends
-    if widen then
-      for _, step in ipairs(sidebar_steps) do
-        if step > frac + 0.02 then
-          target = step
-          break
-        end
-      end
-    else
-      for i = #sidebar_steps, 1, -1 do
-        if sidebar_steps[i] < frac - 0.02 then
-          target = sidebar_steps[i]
-          break
-        end
-      end
-    end
-    vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * target))
-  end
+-- Toggle a persistent shell terminal in a left split. Overrides LazyVim's <C-/> (and <C-_>, what
+-- some terminals send for it), which opens a bottom horizontal split — never wanted here. LazyVim's
+-- floating terminals are untouched on <leader>ft / <leader>fT.
+-- Snacks keys terminals on cmd + cwd + env + count, so cwd is pinned to the GLOBAL cwd (getcwd(-1))
+-- rather than LazyVim.root() and count to 1: a buffer with a different project root or a stray
+-- v:count1 can't silently spawn a second shell.
+local function toggle_shell()
+  Snacks.terminal.toggle(nil, { count = 1, cwd = vim.fn.getcwd(-1), win = { position = "left", width = 0.5 } })
 end
-vim.keymap.set({ "n", "t" }, "<M-]>", cycle_sidebar_width(true), { desc = "Widen left split" })
-vim.keymap.set({ "n", "t" }, "<M-[>", cycle_sidebar_width(false), { desc = "Narrow left split" })
+vim.keymap.set({ "n", "t" }, "<C-/>", toggle_shell, { desc = "Terminal (left split)" })
+vim.keymap.set({ "n", "t" }, "<C-_>", toggle_shell, { desc = "which_key_ignore" })
 
 -- Option+z fullscreens the focused nvim window, one level down from zellij's own Alt+z
 -- (ToggleFocusFullscreen). Zellij binds it in every mode except "locked", so Ctrl+g then Option+z
 -- forwards the same keypress here: one key zooms whatever is actually in front of you, a zellij pane
--- or an nvim window. Mapped in terminal mode too, so it works from the Claude prompt.
+-- or an nvim window. Mapped in terminal mode too, so it works from the shell terminal.
 --
--- Deliberately NOT LazyVim's <leader>wm (Snacks zen zoom): that re-shows the buffer in a full-screen
--- FLOAT, and a float holding the Claude terminal buffer makes util/sidebar's window lookups match it —
--- claude_win() finds the float, and the WinNew that opening it fires sends ensure_leftmost() at a
--- window that can't be moved. Maximising in place leaves the real split layout alone, so winrestcmd()
--- puts every window back at the exact size it had, sidebar width included.
+-- Maximises in place rather than re-showing the buffer in a float like LazyVim's <leader>wm, so the
+-- real split layout is left alone and winrestcmd() puts every window back at the exact size it had.
 ---@type { cmd: string, wins: integer, winbars: table<integer, string> }? state from before the zoom
 local zoom
 local function toggle_zoom()
@@ -133,8 +89,7 @@ local function toggle_zoom()
   elseif wins > 1 and vim.api.nvim_win_get_config(0).relative == "" then
     zoom = { cmd = vim.fn.winrestcmd(), wins = wins, winbars = {} }
     -- Squeezed windows keep drawing two things a zero height/width can't take away: their winbar (a
-    -- screen row of its own — the snacks terminals title theirs, so stacking Claude over the shell left
-    -- a "term://…/bin/zsh" strip across the bottom) and their separator line. Clear the winbars, keep
+    -- screen row of its own — the snacks terminal titles its, leaving a "term://…/bin/zsh" strip) and their separator line. Clear the winbars, keep
     -- the separators — the frame around a maximised window is a useful reminder that it's zoomed.
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
       local winbar = vim.api.nvim_get_option_value("winbar", { win = win })
@@ -152,7 +107,7 @@ local function toggle_zoom()
     vim.cmd.wincmd("|")
     vim.o.winminwidth, vim.o.winminheight = minwidth, minheight
   end
-  -- wincmd drops terminal insert mode, same as util/sidebar's move().
+  -- wincmd drops terminal insert mode.
   if vim.fn.mode() == "t" then
     vim.cmd.startinsert()
   end

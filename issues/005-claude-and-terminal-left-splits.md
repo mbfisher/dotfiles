@@ -1,7 +1,7 @@
 # Claude Code and the shell terminal open a third split, and toggles close the wrong window
 
 **Date:** 2026-07-28
-**Status:** Fixed in `src/.config/nvim/lua/util/sidebar.lua`
+**Status:** Obsolete — claudecode.nvim and `util/sidebar.lua` were removed on 2026-10-23.
 **Affects:** `src/.config/nvim/lua/util/sidebar.lua`, `src/.config/nvim/lua/config/keymaps.lua`,
 `src/.config/nvim/lua/plugins/claudecode.lua`, `src/.config/ghostty/config`
 

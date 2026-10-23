@@ -45,8 +45,8 @@ config-file = ?theme.conf
 # Do NOT re-add a shift+enter=text:\n bind. A literal \n is byte 0x0a, which in vim IS <C-j> —
 # and LazyVim maps <C-j> in terminal mode for window navigation, so it moved focus instead of
 # reaching Claude. Ghostty's native encoding (CSI u, ESC[13;2u) works everywhere instead:
-# zellij negotiates kitty keyboard upstream and forwards CSI u to panes that support it, the
-# bare claude CLI requests it, and nvim decodes it to <S-CR> for claudecode.nvim's newline map.
+# zellij negotiates kitty keyboard upstream and forwards CSI u to panes that support it, and
+# the claude CLI requests it.
 # See issues/004-shift-enter-claude-inside-nvim.md.
 # keybind = shift+enter=text:\n
 
@@ -71,21 +71,3 @@ keybind = alt+3=text:#
 # Uses `[` / `]` key names to override Ghostty's default goto_split:previous/next binds
 keybind = super+[=text:\x1b[91;9u
 keybind = super+]=text:\x1b[93;9u
-
-# Option+[ / Option+] to cycle the nvim left-split width (33/50/66%) — see nvim keymaps.lua.
-# Same CSI u trick as Cmd+[ / Cmd+] above (codepoints 91/93, modifier 3=alt). Sending it as
-# literal text is belt-and-braces: Ghostty's native kitty encoding for alt+[ is this same
-# sequence, and zellij does forward CSI u to panes that support it, so this is deterministic
-# rather than strictly necessary. Took over from the Zellij "Alt [" / "Alt ]" pane-resize
-# binds now Claude is an nvim window rather than a pane.
-# Needs the LEFT option key (macos-option-as-alt = left, below).
-keybind = alt+[=text:\x1b[91;3u
-keybind = alt+]=text:\x1b[93;3u
-
-# Ctrl+; toggles the Claude Code split in nvim, mirroring Ctrl+/ for the shell terminal.
-# Both are mapped in nvim's TERMINAL mode so they work from inside Claude itself, which
-# <leader>ac can't — a leader sequence typed at the Claude prompt just goes to Claude.
-# Same CSI u trick as the binds above (codepoint 59 = ";", modifier 5=ctrl). Sending it as
-# literal text rather than relying on Ghostty's native kitty encoding keeps it deterministic
-# through zellij.
-keybind = ctrl+semicolon=text:\x1b[59;5u

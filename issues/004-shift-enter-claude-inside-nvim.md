@@ -1,7 +1,7 @@
 # Shift+Enter inserts no newline in Claude Code running inside nvim
 
 **Date:** 2026-07-27
-**Status:** Fixed in `src/.config/ghostty/config`
+**Status:** Obsolete — claudecode.nvim and `util/sidebar.lua` were removed on 2026-10-23.
 **Affects:** `src/.config/ghostty/config`, `src/.config/nvim/lua/plugins/claudecode.lua`
 
 ## Symptoms
