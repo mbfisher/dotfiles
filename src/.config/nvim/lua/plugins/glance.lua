@@ -22,6 +22,27 @@ local function jump_with_window_picker(actions)
   end
 end
 
+-- Open in the split beside the current one, only creating a vsplit when there isn't one. Glance's own `v` always
+-- splits, so repeated peeks pile up windows. Neighbours that aren't normal file buffers (e.g. the Claude terminal)
+-- are skipped. Glance runs cmd from the original code window and then loads the item into whichever window is current.
+local function jump_opposite_vsplit(actions)
+  return function()
+    actions.jump({
+      cmd = function()
+        local cur = vim.fn.winnr()
+        for _, dir in ipairs({ "l", "h" }) do
+          local nr = vim.fn.winnr(dir)
+          if nr ~= cur and vim.bo[vim.fn.winbufnr(nr)].buftype == "" then
+            vim.cmd(nr .. "wincmd w")
+            return
+          end
+        end
+        vim.cmd("vsplit")
+      end,
+    })
+  end
+end
+
 return {
   {
     "dnlhc/glance.nvim",
@@ -40,6 +61,7 @@ return {
           list = {
             ["H"] = actions.enter_win("preview"),
             ["i"] = jump_with_window_picker(actions),
+            ["v"] = jump_opposite_vsplit(actions),
           },
           preview = { ["L"] = actions.enter_win("list") },
         },
