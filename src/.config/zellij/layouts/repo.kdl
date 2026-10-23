@@ -1,5 +1,7 @@
 // Workflow this layout is built for:
-//   - Vertical split: claude on the left (33%), nvim + shell stacked on the right.
+//   - Vertical split: claude + shell stacked on the left (33%), nvim on the right. nvim gets a
+//     full-height column; claude sits on top of the stack with a shell below it. Opened by `ws`
+//     for each worktree tab as well as by the session launchers.
 //   - Alt z fullscreens the focused pane while preserving the split; Alt z again restores it.
 //     Use this to give nvim the whole screen while coding, then reveal claude again instantly.
 //   - Alt [ / Alt ] resize the vertical split by ~30% (one direction-less Resize step, which
@@ -34,11 +36,9 @@ layout {
                 pane command="mise" {
                     args "exec" "--" "claude"
                 }
-            }
-            pane stacked=true {
-                pane command="nvim" focus=true
                 pane name="shell"
             }
+            pane command="nvim" focus=true
         }
     }
 }

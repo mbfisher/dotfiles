@@ -332,7 +332,8 @@ ws() {
   fi
   # Restore ZELLIJ_SESSION_NAME if mise hook-env corrupted it during wt switch (see issues/002).
   _zellij_session_guard
-  zellij action new-tab --layout nvim --cwd "$wt_path"
+  # repo layout (claude + shell | nvim) so every worktree tab gets the full workflow.
+  zellij action new-tab --layout repo --cwd "$wt_path"
 }
 
 # Enable tab completion
