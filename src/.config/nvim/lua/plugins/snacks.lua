@@ -18,6 +18,7 @@ return {
     -- instead of the built-in snacks gh_diff picker. Flow: <leader>gp -> pick a PR
     -- -> "View PR diff". We only swap that one action's function, so live search,
     -- comments, and every other PR action stay exactly as snacks provides them.
+    -- Also adds a "Checkout & review in diffview" action (gh_diffview_review) to the same menu.
     -- Applied on VeryLazy because snacks (and its gh submodule) are loaded by then.
     init = function()
       vim.api.nvim_create_autocmd("User", {
@@ -38,6 +39,38 @@ return {
             return (url:gsub("%.git$", "")):match("([^/:]+/[^/]+)$")
           end
 
+          -- Spinner notification for slow async git work; returns finish(msg, level), which swaps
+          -- the spinner (same id) for the outcome.
+          local function spinner(notif, msg)
+            local done = false
+            local timer = assert(vim.uv.new_timer())
+            timer:start(
+              0,
+              80,
+              vim.schedule_wrap(function()
+                if done then
+                  return
+                end
+                Snacks.notify(Snacks.util.spinner() .. "  " .. msg, {
+                  id = notif,
+                  title = "Diffview",
+                  timeout = false, -- keep it up until the work finishes
+                })
+              end)
+            )
+            return function(text, level)
+              done = true
+              timer:stop()
+              timer:close()
+              Snacks.notify(text, {
+                id = notif,
+                title = "Diffview",
+                level = level,
+                timeout = level == "error" and 5000 or 1000,
+              })
+            end
+          end
+
           gh.actions.gh_diff.action = function(item, ctx)
             if not item then
               return
@@ -48,26 +81,7 @@ return {
             end
             local pr = item.number
             local ref = "origin/pr/" .. pr
-            local notif = "diffview-pr-fetch-" .. pr
-
-            -- The fetch is slow on large repos, so run it async (vim.system, non-blocking)
-            -- and animate a spinner notification instead of freezing the UI on vim.fn.system.
-            local done = false
-            local timer = assert(vim.uv.new_timer())
-            timer:start(
-              0,
-              80,
-              vim.schedule_wrap(function()
-                if done then
-                  return
-                end
-                Snacks.notify(Snacks.util.spinner() .. "  Fetching PR #" .. pr .. "…", {
-                  id = notif,
-                  title = "Diffview",
-                  timeout = false, -- keep it up until the fetch finishes
-                })
-              end)
-            )
+            local finish = spinner("diffview-pr-fetch-" .. pr, "Fetching PR #" .. pr .. "…")
 
             -- Raw fetch of the PR head (refs/pull/N/head) into a local-tracking ref,
             -- plus the branches refspec so origin/HEAD's merge-base is current. No
@@ -79,24 +93,73 @@ return {
               "+refs/heads/*:refs/remotes/origin/*",
               "pull/" .. pr .. "/head:refs/remotes/" .. ref,
             }, { text = true }, vim.schedule_wrap(function(res)
-              done = true
-              timer:stop()
-              timer:close()
               if res.code ~= 0 then
-                -- Replace the spinner notification (same id) with the error.
-                Snacks.notify("Fetch failed for PR #" .. pr .. "\n" .. (res.stderr or ""), {
-                  id = notif,
-                  title = "Diffview",
-                  level = "error",
-                  timeout = 5000,
-                })
+                finish("Fetch failed for PR #" .. pr .. "\n" .. (res.stderr or ""), "error")
                 return
               end
-              Snacks.notify("PR #" .. pr .. " fetched", { id = notif, title = "Diffview", timeout = 1000 })
+              finish("PR #" .. pr .. " fetched")
               -- Symmetric diff against the merge-base: the true "what this PR changes" view.
               vim.cmd("DiffviewOpen origin/HEAD..." .. ref)
             end))
           end
+
+          -- "Review PR": check the PR branch out, then open its diff in a new diffview tab with the
+          -- working tree on the right. Because the right side is the real files, the original tab
+          -- holds ordinary buffers on the PR branch (LSP, gd, etc. all work), and gf on a file in
+          -- the diffview panel opens it in that previous tab.
+          gh.actions.gh_diffview_review = {
+            desc = "Checkout & review in diffview",
+            icon = " ",
+            priority = 100,
+            type = "pr",
+            title = "Checkout & review PR #{number} in diffview",
+            action = function(item)
+              if not item then
+                return
+              end
+              if item.repo and origin_repo() and item.repo ~= origin_repo() then
+                Snacks.notify.error("PR #" .. item.number .. " is in " .. item.repo .. ", not this repo")
+                return
+              end
+              -- gh pr checkout refuses to clobber local changes anyway; say so up front instead.
+              local dirty = vim.system({ "git", "status", "--porcelain", "--untracked-files=no" }, { text = true }):wait()
+              if vim.trim(dirty.stdout or "") ~= "" then
+                Snacks.notify.error("Working tree has uncommitted changes — stash or commit before checking out a PR")
+                return
+              end
+
+              local pr = tostring(item.number)
+              local finish = spinner("diffview-pr-review-" .. pr, "Checking out PR #" .. pr .. "…")
+              local function fail(what, res)
+                finish(what .. " failed for PR #" .. pr .. "\n" .. (res.stderr or ""), "error")
+              end
+
+              vim.system({ "gh", "pr", "checkout", pr }, { text = true }, vim.schedule_wrap(function(co)
+                if co.code ~= 0 then
+                  return fail("Checkout", co)
+                end
+                -- Reload any open buffers so the first tab shows the PR branch's contents.
+                vim.cmd("checktime")
+                -- Refresh origin's branches so the merge-base with origin/HEAD is current.
+                vim.system(
+                  { "git", "fetch", "origin", "+refs/heads/*:refs/remotes/origin/*" },
+                  { text = true },
+                  vim.schedule_wrap(function(fe)
+                    if fe.code ~= 0 then
+                      return fail("Fetch", fe)
+                    end
+                    local mb = vim.system({ "git", "merge-base", "origin/HEAD", "HEAD" }, { text = true }):wait()
+                    if mb.code ~= 0 then
+                      return fail("merge-base", mb)
+                    end
+                    finish("Checked out PR #" .. pr)
+                    -- Single rev → working tree on the right, so diffview edits the real files.
+                    vim.cmd("DiffviewOpen " .. vim.trim(mb.stdout))
+                  end)
+                )
+              end))
+            end,
+          }
         end,
       })
     end,
