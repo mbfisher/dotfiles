@@ -31,6 +31,19 @@ local function last_used_file(skip)
   return best and best.bufnr
 end
 
+--- Is a home screen already showing in any window, in any tab? Snacks gives every dashboard the same
+--- augroup and deletes it when any one of them closes, so with two alive the survivor's own cleanup
+--- throws E367 "No such group" when it later closes — typically on opening a file over it from a picker.
+---@return boolean
+local function home_screen_shown()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "snacks_dashboard" then
+      return true
+    end
+  end
+  return false
+end
+
 --- Show the home screen in `win`, taking over an empty throwaway buffer when that's what the window
 --- holds (what nvim leaves behind after the last file is deleted). Otherwise that buffer would linger
 --- in the bufferline as a stray [No Name] once the dashboard replaced it in the window.
@@ -109,14 +122,16 @@ local function fill_empty_screen(closed_buf)
   if code_win then
     -- A code window survives, so only step in once the last file is gone. Bailing out when it already
     -- holds the dashboard also stops the buffer takeover from re-triggering this.
-    if file or vim.bo[vim.api.nvim_win_get_buf(code_win)].filetype == "snacks_dashboard" then
+    -- Checking every window, not just this one, keeps it to a single dashboard (see home_screen_shown).
+    if file or home_screen_shown() then
       return
     end
     open_home_screen(code_win)
     return
   end
 
-  if panels == 0 then
+  -- A dashboard can only be in another tab here, since this one has no code window to hold it.
+  if panels == 0 or (not file and home_screen_shown()) then
     return
   end
   -- Nothing but panels left. Make room on the right, focused, and hand the column its width back.
