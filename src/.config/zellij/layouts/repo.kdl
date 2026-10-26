@@ -33,9 +33,9 @@ layout {
     tab {
         pane split_direction="vertical" {
             pane stacked=true size="33%" {
-                pane command="mise" {
-                    args "exec" "--" "claude"
-                }
+                // claude-pane forks the session handed off by the CwdChanged hook when Claude opened this
+                // worktree tab itself; otherwise it starts a fresh claude.
+                pane command="claude-pane"
                 pane name="shell"
             }
             pane command="nvim" focus=true

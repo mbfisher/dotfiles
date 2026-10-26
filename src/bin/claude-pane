@@ -1,0 +1,10 @@
+#!/bin/bash
+# The claude pane of the zellij repo layout. If the CwdChanged hook (~/.claude/hooks/zellij-worktree-tab.sh) left a
+# handoff for this directory, fork that session here; otherwise start a fresh one.
+f="${XDG_CACHE_HOME:-$HOME/.cache}/claude-handoff/$(pwd -P | tr -d '\n' | shasum | cut -c1-16)"
+if [[ -f $f ]]; then
+  sid=$(<"$f")
+  rm -f "$f"
+  exec mise exec -- claude --resume "$sid" --fork-session
+fi
+exec mise exec -- claude
