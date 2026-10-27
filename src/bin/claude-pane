@@ -5,6 +5,9 @@ f="${XDG_CACHE_HOME:-$HOME/.cache}/claude-handoff/$(pwd -P | tr -d '\n' | shasum
 if [[ -f $f ]]; then
   sid=$(<"$f")
   rm -f "$f"
+  # Focus this pane so the stack shows the fork rather than the shell. Delayed so it lands after the layout applies
+  # its own focus (nvim); run from $HOME so mise doesn't rewrite the env mid-action (issues/002).
+  ( sleep 0.5; cd "$HOME" && zellij action focus-pane-id "$ZELLIJ_PANE_ID" ) >/dev/null 2>&1 &
   exec mise exec -- claude --resume "$sid" --fork-session
 fi
 exec mise exec -- claude
