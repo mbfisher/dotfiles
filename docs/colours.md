@@ -36,8 +36,7 @@ Verified by diffing `ghostty +show-config --default` against the bundled `Tomorr
 
 ## Light terminal scheme
 
-Flexoki Light with its background overridden to `#f2f0e5`, one step down Flexoki's paper scale, because
-the theme's own `#fffcf0` is uncomfortably bright. Foreground stays near-black (`#100f0f`).
+Flexoki Light uses a warm paper background (`#fffcf0`) and near-black foreground (`#100f0f`).
 Its ANSI colours remain distinct and readable in direct sunlight without the stark neutral white
 and washed-out yellow that made the previous Atom One Light attempt unpleasant.
 
@@ -75,7 +74,7 @@ Accent contrast means are a dead heat (6.00:1 vs 6.11:1), so contrast is the wro
 choosing between them. That chroma difference is the whole reason to run a separate scheme for code.
 
 The light editor keeps onedark's syntax accents and uses Flexoki's warm background scale:
-`#f2f0e5`, `#e6e4d9`, `#dad8ce`, `#cecdc3` (shifted one step darker to match the terminal). Body text is `#343331`; terminal buffers remain
+`#fffcf0`, `#f2f0e5`, `#e6e4d9`, `#cecdc3`. Body text is `#343331`; terminal buffers remain
 near-black (`#100f0f`) to match bare Ghostty panes.
 
 ## Where each is defined
