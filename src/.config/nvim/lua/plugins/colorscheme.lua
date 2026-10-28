@@ -13,7 +13,7 @@ local terminal_schemes = {
     },
   },
   light = {
-    bg = "#fffcf0",
+    bg = "#f2f0e5",
     fg = "#100f0f",
     ansi = {
       "#100f0f", "#af3029", "#66800b", "#ad8301", "#205ea6", "#a02f6f", "#24837b", "#6f6e69",
@@ -39,9 +39,9 @@ local editor_schemes = {
     -- Keep onedark's readable syntax accents, but replace its neutral greys with Flexoki's warm
     -- paper scale so the editor and surrounding terminal read as one surface.
     colors = {
-      bg0 = "#fffcf0",
-      bg1 = "#f2f0e5",
-      bg2 = "#e6e4d9",
+      bg0 = "#f2f0e5",
+      bg1 = "#e6e4d9",
+      bg2 = "#dad8ce",
       bg3 = "#cecdc3",
       bg_d = "#dad8ce",
       fg = "#343331",
