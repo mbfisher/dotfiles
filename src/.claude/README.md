@@ -22,17 +22,10 @@ manually on each machine:
 
 ```json
 {
-  "model": "fable",
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "opus",
-    "CLAUDE_CODE_SUBAGENT_MODEL_FORCE": "1"
-  }
+  "model": "opus"
 }
 ```
 
-- `model` sets the default model for new sessions (desktop app and terminal).
-- `CLAUDE_CODE_SUBAGENT_MODEL` makes subagents use a cheaper model than the main conversation.
-- `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` extends that to the built-in Explore and Plan agents, which
-  otherwise ignore it.
+- `model` sets the default model for new sessions (desktop app and terminal). Subagents inherit it.
 
 When adding a new shared preference, record it here so it can be reproduced on the next machine.
