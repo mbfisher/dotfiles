@@ -52,3 +52,7 @@
     line-numbers-minus-style = "#914c54"
     line-numbers-plus-style = "#449dab"
     line-numbers-zero-style = "#3b4261"
+
+# Route the incident-io org through the work-only SSH key (see Host github-incident-io in ~/.ssh/config)
+[url "git@github-incident-io:incident-io/"]
+	insteadOf = git@github.com:incident-io/
